@@ -1,7 +1,8 @@
 # Open Referral UK research for ORUK Navigator
 
-**Status:** Phase 0 technical research  
-**Access date for every source:** 15 September 2026  
+**Status:** Phase 0 technical research
+
+**Access date for every source:** 15 September 2026
 **Source policy:** first-party Open Referral UK, official Open Referral, official publisher feeds, and official GitHub repositories only. No contract, field, taxonomy term, or feed capability is inferred where the source does not state it.
 
 ## Executive conclusions
