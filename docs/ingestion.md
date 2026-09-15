@@ -66,7 +66,7 @@ Fetchers treat every response as untrusted.
 - Only manifest-approved HTTPS origins and redirect targets are reachable.
 - Hostnames and resolved addresses must be checked to prevent requests to private, loopback, link-local, metadata, or otherwise non-public networks.
 - Requests use an identifiable user agent, timeouts, bounded retries with backoff, response-size limits, and a narrow accepted content-type list.
-- Redirects, authentication challenges, status codes, content type, byte count, timing, and a response hash are recorded.
+- Redirects, authentication challenges, status codes, content type, byte count, timing, and a raw response hash are recorded. The raw hash is diagnostic evidence, not the candidate identity, because publisher markup may contain request-varying content.
 - HTML is parsed as data. Scripts, embedded instructions, forms, images, maps, downloads, and active content are never executed or copied.
 - Raw responses are transient processing material. V1 retains the content hash and minimum field evidence required for review, not an indefinite copy of the entire page.
 - Secrets, personal search text, and unnecessary response headers are never logged.
@@ -96,13 +96,15 @@ External shapes stop at the adapter. Downstream review and publication consume n
 
 ## Candidate identity and idempotency
 
-A processing attempt is uniquely identified by:
+A candidate is uniquely identified by:
 
 ```text
-source page ID + response content hash + adapter version + extraction-rules version
+source page ID + canonical extracted-content hash + adapter version + extraction-rules version
 ```
 
-The database must enforce uniqueness for that identity. Replaying the same response through the same rules returns the existing candidate rather than creating another publication or duplicate review task.
+The canonical extracted-content hash is computed from a deterministic serialization of selected source evidence, normalized fields, and source actions after navigation chrome, scripts, styling, session values, and excluded content have been removed. The raw response hash remains attached to the fetch observation.
+
+The database must enforce uniqueness for the candidate identity. Replaying equivalent extracted content through the same rules returns the existing candidate rather than creating another publication or duplicate review task.
 
 A changed adapter or extraction-rules version intentionally produces a new candidate, even when the source response is unchanged, because the transformation itself may change public facts.
 
@@ -110,7 +112,7 @@ A changed adapter or extraction-rules version intentionally produces a new candi
 
 Every candidate contains:
 
-- the source-page identity and response hash;
+- the source-page identity, fetch-observation identity, raw response hash, and canonical extracted-content hash;
 - adapter and rules versions;
 - extracted fields in the internal candidate schema;
 - per-field evidence identifying the source section or minimal text fragment used;
