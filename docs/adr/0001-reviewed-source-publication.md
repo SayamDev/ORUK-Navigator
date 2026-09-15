@@ -1,0 +1,3 @@
+# Publish reviewed source versions rather than live scraped changes
+
+ORUK Navigator v1 uses allowlisted Tameside Council web pages because no licensed, working local ORUK feed is available. Automated fetches therefore create evidence-backed candidates and field-level diffs, while only an explicit review decision creates an immutable public version; failures, missing pages, and changed HTML never overwrite or delete the last approved record. This costs editorial effort but prevents an unstable page structure, temporary outage, licensing change, or incorrect extraction from silently changing public support information, and it leaves a clean path for future feed adapters to earn more automation through stable contracts and tests.

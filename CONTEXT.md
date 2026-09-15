@@ -49,3 +49,23 @@ The field-backed evidence showing which query terms, reviewed mappings, structur
 ## Pilot coverage
 
 The explicitly limited set of admitted sources and catalogue entries searchable in v1. Pilot coverage must never be described as a complete directory of Tameside support.
+
+## Ingestion run
+
+One recorded attempt to evaluate one or more admitted source pages through their configured adapters. A run reports transport, extraction, candidate, and review-work outcomes; it does not directly define what is public.
+
+## Candidate
+
+A validated, evidence-backed proposed catalogue state produced by a source adapter. A candidate is not publicly searchable until it is approved.
+
+## Publication
+
+An immutable reviewed version of a catalogue entry. Each catalogue entry has at most one active publication, while older publications remain part of its provenance history.
+
+## Source health
+
+Navigator’s operational observation of whether a source can be fetched and interpreted according to its admitted contract. Source health is distinct from service availability and catalogue-entry lifecycle.
+
+## Stale
+
+A source-health state indicating that Navigator has not completed a contract-valid check within the source manifest’s freshness window. Stale does not mean closed, invalid, or unavailable; the interface must disclose the age and preserve the last reviewed publication.
