@@ -69,3 +69,15 @@ Navigator’s operational observation of whether a source can be fetched and int
 ## Stale
 
 A source-health state indicating that Navigator has not completed a contract-valid check within the source manifest’s freshness window. Stale does not mean closed, invalid, or unavailable; the interface must disclose the age and preserve the last reviewed publication.
+
+## Field evidence
+
+The minimum source-backed fragment, value, or locator showing where one candidate or publication field came from and which normalization was applied. Field evidence supports review, provenance, and match explanations without requiring indefinite storage of a whole source page.
+
+## Source action
+
+An explicitly source-backed next step such as applying, requesting support, making a referral, opening authoritative details, or following urgent guidance. A source action is distinct from a general contact method.
+
+## Classification
+
+A source-supplied or editorially reviewed term attached to a publication for browsing and search. Every classification names its scheme and origin; editorial classifications must never be presented as official ORUK taxonomy terms.

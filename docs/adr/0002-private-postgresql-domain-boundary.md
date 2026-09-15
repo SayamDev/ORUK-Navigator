@@ -1,0 +1,3 @@
+# Keep ingestion and catalogue state in private PostgreSQL schemas
+
+ORUK Navigator will use PostgreSQL on Supabase but will not expose its ingestion or catalogue tables directly through the Supabase Data API. Untrusted source state lives in a private `ingest` schema, immutable reviewed public state lives in a private `catalogue` schema, and Next.js consumes both through purpose-specific repository interfaces; this adds a server boundary but prevents raw HTML/ORUK shapes, review internals, and mutable persistence details from becoming a public contract, while remaining portable to ordinary PostgreSQL and leaving a narrow dedicated `api` schema available if direct Data API use is justified later.
