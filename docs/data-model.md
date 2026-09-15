@@ -268,7 +268,7 @@ A replaceable projection of the active publication for deterministic search.
 - normalized place terms and reviewed synonym/classification inputs
 - projection version and build time
 
-Use a GIN index on the `tsvector`. Search weighting and ranking remain outside this persistence decision and are resolved in the search ticket. The projection can be rebuilt without changing catalogue truth.
+Use a GIN index on the `tsvector`. Search weighting, ranking, and explanation rules are defined in `docs/search.md`. The projection can be rebuilt without changing catalogue truth.
 
 ## Referential and transactional invariants
 
@@ -348,10 +348,10 @@ Input/output types belong to the application/domain boundary. SQL row types rema
 ## Deferred decisions
 
 - Exact SQL/migration syntax is implementation work and will be tested against the chosen local Supabase/Postgres version.
-- Search weights, synonym rules, classification schemes, and evaluation thresholds belong to the search decision.
+- Search weights, synonym rules, classification schemes, explanations, and evaluation thresholds are defined in `docs/search.md`.
 - Feedback-report storage and reviewer authorization belong to the operations decision.
-- Postcode lookup and spatial filtering belong to the location decision.
-- Embeddings/vector columns are absent unless the semantic-search prototype proves a v1 need.
+- Postcode lookup and the v1 prohibition on distance/spatial claims are defined in `docs/research/location-postcode.md`.
+- Embeddings/vector columns remain absent unless the separately evaluated semantic-search decision proves a v1 need.
 
 ## Verification plan
 

@@ -166,7 +166,7 @@ Source health states:
 - `invalid`: content was reachable but failed transport, structure, or extraction validation;
 - `suspended`: fetching or publication is disabled by an operational, safety, or licensing decision.
 
-A catalogue entry may remain active while its source is stale or unreachable, but the public interface must disclose the condition. Search ranking may use a documented freshness signal; it may not hide a result solely because of one failed check.
+A catalogue entry may remain active while its source is stale or unreachable, but the public interface must disclose the condition. V1 search ranking does not use freshness as a relevance signal and may not hide a result solely because of one failed check; see `docs/search.md`.
 
 ## Run state and observability
 
