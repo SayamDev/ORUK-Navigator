@@ -7,7 +7,8 @@ This record captures the five-point comparison completed after rendering the imp
 
 ## 1. Layout
 
-- The homepage retains one dominant task, a limited-pilot warning, and a three-step explanation.
+- The homepage follows the approved open-white composition: text wordmark, single-line desktop heading, signature route line, two-column search, pale-green scope strip, and compact horizontal process.
+- Topic choices stay out of the default composition. They appear contextually as someone types or when they choose **Browse support types**.
 - Results remain an open divided list rather than a dashboard.
 - Service details use an article and provenance rail on wide screens, collapsing to one column on small screens.
 - The report journey keeps visible radio choices and privacy guidance.
@@ -21,20 +22,20 @@ This record captures the five-point comparison completed after rendering the imp
 ## 3. Colour and identity
 
 - Navy `#243588`, cyan `#009fe3`, green `#7cc68d`, and teal `#82c0c7` establish the intended visual relationship to the iNetwork/iStandUK ecosystem.
-- The wordmark and route motif are original to ORUK Navigator.
+- The text wordmark and restrained route signature are original to ORUK Navigator. The line is decorative and does not imply mapping or routing capability.
 - No third-party logo, endorsement claim, gradient, glass treatment, or purple AI styling is used.
 
 ## 4. Components and content
 
-- Search, result cards, match explanations, source warnings, provenance, validation errors, and prototype confirmations are implemented as semantic components.
+- Search, contextual topic suggestions, result cards, match explanations, source warnings, provenance, validation errors, and prototype confirmations are implemented as semantic components.
 - All public service claims come from the reviewed fixture/source manifest; fast-changing contact details are not invented or copied into the prototype.
-- The reporting form explicitly states that prototype reports are not sent or stored.
+- The location field is optional, starts empty, and is used only for a Tameside-area check when supplied.
 
 ## 5. Responsive and interaction behaviour
 
-- Repository-backed Playwright checks pass in isolated Chromium at 1280×720 and 390×844.
-- The 390px viewport has no horizontal overflow.
+- Repository-backed Playwright checks pass in isolated Chromium at 1280×720, 390×844, and 320×720.
+- Desktop and narrow-mobile layouts have no horizontal overflow.
 - Inputs and actions retain at least 48px targets, visible labels, and keyboard focus styling.
-- Keyboard submission moves focus to the result summary; the need and place never enter the URL.
+- Keyboard submission moves focus to the result summary; the need and optional location never enter the URL.
 - The search → result → detail/provenance journey runs against the seeded private Postgres repository with a clean browser console.
-- Browser testing exposed and fixed a pre-hydration native-form privacy leak by ensuring sensitive fields have no serializable form names.
+- Automated WCAG A and AA scans pass on the homepage, dynamic results, About page, service details, reporting form, and technical status page.
