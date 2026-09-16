@@ -29,8 +29,9 @@ The working prototype includes:
 - deterministic matching over five reviewed Tameside service fixtures;
 - field-backed “Why this matched” reasons;
 - service details with authoritative source links and provenance;
-- honest missing-information and limited-coverage language; and
-- a server-validated correction-report journey with random references and privacy-bounded storage.
+- honest missing-information and limited-coverage language;
+- a server-validated correction-report journey with random references and privacy-bounded storage; and
+- a public technical-status page that separates source-checking health from service availability.
 
 ### Architecture
 
@@ -74,8 +75,9 @@ The working prototype includes:
 
 - WCAG 2.2 AA target
 - Semantic landmarks, headings, labels, fieldsets, error summaries, and keyboard-visible focus
-- 48px minimum control targets and responsive browser checks at 1280×720 and 390×844
+- 48px minimum control targets and responsive browser checks at 1280×720, 390×844, and 320×720
 - Accessibility is a release gate, not a visual-design preference
+- [Accessibility release review and remaining human screen-reader gate](docs/accessibility-review.md)
 
 ### Security
 
@@ -84,6 +86,7 @@ The working prototype includes:
 - Corrections cannot mutate catalogue data automatically
 - Correction text, short-lived keyed abuse controls, append-only review history, and allowlisted events live in a private operations schema
 - [Privacy-first operating and retention model](docs/operations.md)
+- [Security and privacy release review](docs/security/release-review.md)
 
 ### Testing
 
@@ -97,7 +100,9 @@ pnpm test:repositories
 pnpm test:e2e
 ```
 
-The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, two isolated Chromium journeys, strict TypeScript checking, ESLint, and an optimized Next.js production build.
+The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, and 27 production-mode Chromium checks across desktop, 390px, and 320px. CI also enforces strict TypeScript, ESLint, a production build, secret scanning, dependency review, and a production dependency audit.
+
+[Deployment, verification, recovery, and rollback runbook](docs/runbooks/deployment-and-rollback.md)
 
 ### ADRs
 
@@ -109,7 +114,7 @@ The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, and retention automation are complete. The full production product is not finished: production ingestion scheduling, hosting, named operator staffing, secret configuration, backup/restore rehearsal, and security/accessibility launch audits remain.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, and local recovery rehearsal are complete. The full production product is not finished: production hosting/database creation, ingestion scheduling, fallback operator staffing, secret configuration, managed-backup verification, and a human screen-reader pass remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

@@ -13,6 +13,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "security:secrets": "node scripts/check-secrets.mjs",
+    "security:audit": "pnpm audit --prod --audit-level high",
+    "search:rebuild": "node scripts/rebuild-search-projection.mjs",
+    "recovery:rehearse": "node scripts/rehearse-recovery.mjs",
     "db:start": "supabase db start",
     "db:reset": "supabase db reset --local",
     "db:test": "supabase test db --local",
@@ -30,6 +34,7 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",

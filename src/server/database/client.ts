@@ -11,8 +11,14 @@ export function getDatabase(): Sql {
     throw new Error("DATABASE_URL is required by the server database boundary");
   }
 
+  const configuredPoolSize = Number(process.env.DATABASE_POOL_SIZE ?? "10");
+  if (!Number.isInteger(configuredPoolSize) || configuredPoolSize < 1 || configuredPoolSize > 10) {
+    throw new Error("DATABASE_POOL_SIZE must be an integer between 1 and 10");
+  }
+
   client ??= postgres(databaseUrl, {
-    max: 10,
+    max: configuredPoolSize,
+    prepare: process.env.DATABASE_PREPARE !== "false",
     idle_timeout: 20,
     connect_timeout: 10,
     transform: postgres.camel,

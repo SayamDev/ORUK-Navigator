@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 import { validateReport } from "@/lib/report";
 
@@ -14,15 +14,22 @@ const choices = [
 
 export function ReportForm({ serviceName, entryPublicId }: { serviceName: string; entryPublicId: string }) {
   const [error, setError] = useState("");
+  const [errorTarget, setErrorTarget] = useState<string | null>(null);
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const result = validateReport({ problem: String(data.get("problem") ?? ""), details: String(data.get("detail") ?? "") });
     const firstError = result.problem ?? result.details;
-    if (firstError) { setError(firstError); return; }
+    if (firstError) {
+      setError(firstError);
+      setErrorTarget(result.problem ? "problem-incorrect" : "detail");
+      window.requestAnimationFrame(() => errorRef.current?.focus());
+      return;
+    }
     setError(""); setSending(true);
     try {
       const response = await fetch("/api/corrections", {
@@ -35,6 +42,8 @@ export function ReportForm({ serviceName, entryPublicId }: { serviceName: string
       setReference(payload.reference);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The report could not be saved. Try again later.");
+      setErrorTarget(null);
+      window.requestAnimationFrame(() => errorRef.current?.focus());
     } finally {
       setSending(false);
     }
@@ -43,11 +52,11 @@ export function ReportForm({ serviceName, entryPublicId }: { serviceName: string
   if (reference) return <div className="confirmation" role="status"><p className="eyebrow">Report received</p><h2>Thank you for flagging this</h2><p>A maintainer will review the catalogue information. Your reference is <strong>{reference}</strong>.</p><p>We cannot provide an outcome because this form does not collect contact details.</p></div>;
 
   return <form className="report-form" onSubmit={submit} noValidate>
-    {error && <div className="error-summary" role="alert"><strong>There is a problem</strong><a href="#problem-incorrect">{error}</a></div>}
+    {error && <div ref={errorRef} className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong>{errorTarget ? <a href={`#${errorTarget}`}>{error}</a> : <p>{error}</p>}</div>}
     <fieldset><legend>What is wrong?</legend><p>Select the option that best describes the problem with {serviceName}.</p>
       {choices.map(([value, label]) => <div className="radio" key={value}><input id={`problem-${value}`} name="problem" value={value} type="radio" /><label htmlFor={`problem-${value}`}>{label}</label></div>)}
     </fieldset>
-    <div className="field"><label htmlFor="detail">Tell us more <span>(optional)</span></label><p id="detail-hint">Do not include personal or sensitive information. Maximum 1,000 characters.</p><textarea id="detail" name="detail" rows={6} maxLength={1000} aria-describedby="detail-hint" /></div>
+    <div className="field"><label htmlFor="detail">Tell us more <span>(optional)</span></label><p id="detail-hint">Do not include personal or sensitive information. Maximum 1,000 characters.</p><textarea id="detail" name="detail" rows={6} maxLength={1000} autoComplete="off" aria-describedby="detail-hint" aria-invalid={errorTarget === "detail"} /></div>
     <div className="honeypot" aria-hidden="true"><label htmlFor="website">Leave this blank</label><input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" /></div>
     <button className="button button-primary" type="submit" disabled={sending}>{sending ? "Sending…" : "Send report"}</button>
   </form>;
