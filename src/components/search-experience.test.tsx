@@ -25,12 +25,43 @@ afterEach(cleanup);
 
 describe("SearchExperience", () => {
   it("explains scope and labels both search fields", () => {
-    render(<SearchExperience services={[service]} />);
+    const { container } = render(<SearchExperience services={[service]} />);
 
     expect(screen.getByRole("heading", { name: "Find support in Tameside" })).toBeInTheDocument();
     expect(screen.getByLabelText("What support are you looking for?")).toBeInTheDocument();
     expect(screen.getByLabelText("Where do you need support?")).toBeInTheDocument();
     expect(screen.getByText(/five reviewed Tameside services/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What this pilot can help with" })).toBeInTheDocument();
+    expect(container.querySelector(".route-motif")).not.toBeInTheDocument();
+  });
+
+  it("shows common searches before the user knows what to type", () => {
+    render(<SearchExperience services={[service]} />);
+
+    expect(screen.getByText("Common searches")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Benefits and money advice" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Housing and homelessness" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Adult mental health" })).toBeInTheDocument();
+  });
+
+  it("suggests relevant searches while the user types and lets them choose one", async () => {
+    const user = userEvent.setup();
+    render(<SearchExperience services={[service]} />);
+
+    const need = screen.getByLabelText("What support are you looking for?");
+    await user.type(need, "money");
+
+    expect(screen.getByText('Suggestions for "money"')).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Benefits and money advice" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Debt and arrears" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Emergency financial help" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adult mental health" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Benefits and money advice" }));
+
+    expect(need).toHaveValue("I need help with money and debt advice");
+    expect(need).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Benefits and money advice" })).toBeInTheDocument();
   });
 
   it("searches repository records without placing the need or place in the address", async () => {

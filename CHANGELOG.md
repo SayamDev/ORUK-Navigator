@@ -7,11 +7,17 @@ All notable public-facing changes are recorded here. The project follows semanti
 ### Added
 
 - Privacy-preserving local-support search over reviewed Tameside publications.
+- Common-search guidance and live topic suggestions for people who do not know what support is available.
 - Source-backed service detail, provenance, correction reporting, and technical status journeys.
 - Private ingestion, catalogue, and operations schemas with immutable publication history.
 - CI release gates for code quality, database contracts, responsive browser journeys, accessibility, dependencies, and security headers.
 - Reproducible search-projection rebuild and backup/restore rehearsal commands.
 - Public Vercel pilot backed by a dedicated UK-region Free Plan Supabase project.
+
+### Changed
+
+- Replaced the decorative home-page route motif with a factual summary of the pilot coverage.
+- Linked the primary Find support navigation directly to the search form.
 
 ### Security
 

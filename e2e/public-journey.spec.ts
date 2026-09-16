@@ -12,10 +12,19 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
   page.on("pageerror", (error) => browserProblems.push(`pageerror: ${error.message}`));
 
   await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("link", { name: "Find support" }).click();
+  await expect(page).toHaveURL(/#find-support$/);
+  await expect(page.locator("#find-support")).toBeInViewport();
+
   const need = page.getByLabel("What support are you looking for?");
   await need.focus();
-  await page.keyboard.type("money and debt advice");
-  await page.keyboard.press("Tab");
+  await page.keyboard.type("money");
+  await expect(page.getByText('Suggestions for "money"')).toBeVisible();
+  await page.getByRole("button", { name: "Benefits and money advice" }).click();
+  await expect(need).toHaveValue("I need help with money and debt advice");
+  await expect(need).toBeFocused();
+
+  await page.getByLabel("Where do you need support?").focus();
   await expect(page.getByLabel("Where do you need support?")).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: /Find support/ })).toBeFocused();
@@ -24,7 +33,9 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
   await expect(page.getByRole("heading", { name: "Support that may help" })).toBeVisible();
   await expect(page.locator(".results-heading-row")).toBeFocused();
   await expect(page.locator(".result-card")).toHaveCount(3);
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL("http://localhost:3000/#find-support");
+  expect(page.url()).not.toContain("money");
+  expect(page.url()).not.toContain("Ashton");
 
   await page.getByRole("link", { name: "Welfare Rights" }).click();
   await expect(page.getByRole("heading", { name: "Welfare Rights" })).toBeVisible();
