@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseCorrectionRequest } from "@/server/corrections/validation";
+import { publicCorrectionsAreEnabled } from "@/server/operations/corrections-availability";
 import { getOperationsRepository } from "@/server/repositories";
 import {
   CorrectionRateLimitError,
@@ -13,6 +14,9 @@ const maximumBodyBytes = 8_192;
 
 export async function POST(request: NextRequest) {
   const correlationId = randomUUID();
+  if (!publicCorrectionsAreEnabled()) {
+    return errorResponse("Corrections are not currently available.", 503, correlationId);
+  }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return errorResponse("Request must be JSON.", 415, correlationId);
   }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { getCatalogueRepository } from "@/server/repositories";
 import { sourceHealthMessage } from "@/lib/source-health";
+import { publicCorrectionsAreEnabled } from "@/server/operations/corrections-availability";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
       <section><h2>Contact, opening times and accessibility</h2><p>Check the publisher’s source page. This prototype does not reproduce details that may change quickly.</p></section>
     </article><aside aria-label="Match and source information">
       <section className="aside-card"><h2>Source and provenance</h2><dl><div><dt>Publisher</dt><dd>{service.providerName}</dd></div><div><dt>Source checked</dt><dd>{checkedOn}</dd></div><div><dt>Licence</dt><dd>Open Government Licence v3.0, subject to publisher exclusions</dd></div></dl>{sourceUrl && <a href={sourceUrl}>View original source <span aria-hidden="true">↗</span></a>}</section>
-      <Link className="report-link" href={`/services/${service.slug}/report`}>Report a problem with this information</Link>
+      {publicCorrectionsAreEnabled() && <Link className="report-link" href={`/services/${service.slug}/report`}>Report a problem with this information</Link>}
     </aside></div>
   </main>;
 }

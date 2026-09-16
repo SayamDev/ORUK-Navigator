@@ -1,6 +1,6 @@
 # Runbook: deploy, verify, and roll back the pilot
 
-**Status:** deployment-ready; production account setup pending
+**Status:** public read-only pilot deployed; correction intake remains gated pending operational ownership
 **Target:** Vercel for the Next.js application and a dedicated Supabase PostgreSQL project in a UK region
 
 ## Release authority
@@ -41,7 +41,10 @@ References: [Vercel Git deployments](https://vercel.com/docs/deployments/git) an
    DATABASE_PREPARE=false
    CORRECTION_RATE_LIMIT_SECRET=<independent random value, at least 32 characters>
    OPERATIONS_MAINTENANCE_SECRET=<different random value, at least 32 characters>
+   PUBLIC_CORRECTIONS_ENABLED=false
    ```
+
+   Do not change `PUBLIC_CORRECTIONS_ENABLED` to `true` until `CORRECTIONS_FALLBACK_OWNER` and `CORRECTIONS_REVIEW_HOURS` are also populated with the approved operating arrangement. The service link, report page, and correction API all fail closed unless all three values are present.
 
 4. Import `SayamDev/ORUK-Navigator` into Vercel. Keep `main` as production and allow pull requests to create previews. Do not expose any server value with a `NEXT_PUBLIC_` prefix.
 5. Deploy a preview from the release pull request. Run the smoke checks below before promoting the same commit to production.

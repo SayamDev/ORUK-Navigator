@@ -12,7 +12,7 @@ It is not produced, endorsed, or maintained by iStandUK, iNetwork, Tameside Coun
 
 ### Live Product
 
-The accessible public-journey prototype is implemented and production-buildable. Public hosting is not live yet; deployment remains a launch milestone.
+The accessible public-journey prototype is live at [oruk-navigator.vercel.app](https://oruk-navigator.vercel.app). It runs on Vercel with a dedicated Free Plan Supabase database in the UK region.
 
 Run it locally:
 
@@ -30,7 +30,7 @@ The working prototype includes:
 - field-backed “Why this matched” reasons;
 - service details with authoritative source links and provenance;
 - honest missing-information and limited-coverage language;
-- a server-validated correction-report journey with random references and privacy-bounded storage; and
+- a server-validated correction-report journey with random references and privacy-bounded storage, gated until fallback ownership is configured; and
 - a public technical-status page that separates source-checking health from service availability.
 
 ### Architecture
@@ -69,7 +69,7 @@ The working prototype includes:
 - Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
 - Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
 - [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
-- Deployment and its production ingestion schedule remain upcoming implementation milestones
+- Production deployment is live; the production ingestion schedule remains an upcoming implementation milestone
 
 ### Accessibility
 
@@ -100,7 +100,7 @@ pnpm test:repositories
 pnpm test:e2e
 ```
 
-The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, and 27 production-mode Chromium checks across desktop, 390px, and 320px. CI also enforces strict TypeScript, ESLint, a production build, secret scanning, dependency review, and a production dependency audit.
+The current checkpoint passes 59 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, and 27 production-mode Chromium checks across desktop, 390px, and 320px. CI also enforces strict TypeScript, ESLint, a production build, secret scanning, dependency review, and a production dependency audit.
 
 [Deployment, verification, recovery, and rollback runbook](docs/runbooks/deployment-and-rollback.md)
 
@@ -114,7 +114,7 @@ The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, and local recovery rehearsal are complete. The full production product is not finished: production hosting/database creation, ingestion scheduling, fallback operator staffing, secret configuration, managed-backup verification, and a human screen-reader pass remain.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are complete. The full production product is not finished: ingestion scheduling, fallback operator staffing, correction-workflow activation, managed-backup verification, and a human screen-reader pass remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 
