@@ -5,6 +5,8 @@
 
 ## Production setup gate
 
+**Current production decision (16 September 2026):** no fallback maintainer is available, so the owner chose to keep public correction intake disabled. The service link, report page, and API remain fail-closed. The maintenance workflow may still run because it reconciles source alerts and retention independently of public intake.
+
 Before enabling public corrections:
 
 1. Name a primary and fallback maintenance owner and record staffed review hours in the private operator contact record.

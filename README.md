@@ -114,7 +114,7 @@ The current checkpoint passes 59 unit/component/evaluation/ingestion tests, 63 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are complete. The full production product is not finished: ingestion scheduling, fallback operator staffing, correction-workflow activation, managed-backup verification, and a human screen-reader pass remain.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are complete. Public correction intake is intentionally disabled because no fallback operator is available. The full production product is not finished: ingestion scheduling, managed-backup verification, and a human screen-reader pass remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 
