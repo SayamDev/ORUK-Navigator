@@ -40,12 +40,52 @@ describe("Postgres repository boundary", () => {
 
   it("claims replayed candidates idempotently", async () => {
     const candidate = await candidateFixture("idempotent");
+    candidate.evidence = [
+      {
+        fieldPath: "name",
+        evidenceKind: "text",
+        sourceLocator: "main h1",
+        normalizedExcerpt: "Fixture name",
+        transformationNote: "Whitespace only.",
+        safetyFlags: [],
+      },
+    ];
 
     const first = await ingestion.claimCandidate(candidate);
     const replay = await ingestion.claimCandidate(candidate);
 
     expect(first.created).toBe(true);
     expect(replay).toEqual({ ...first, created: false });
+    const [evidenceCount] = await sql.unsafe<Array<{ count: number }>>(
+      "select count(*)::integer as count from ingest.candidate_field_evidence where candidate_id = $1",
+      [first.candidateId],
+    );
+    expect(evidenceCount?.count).toBe(1);
+  });
+
+  it("records rejection without creating or switching a publication", async () => {
+    const suffix = randomUUID();
+    const claim = await ingestion.claimCandidate(await candidateFixture(suffix));
+
+    await ingestion.recordDisposition({
+      candidateId: claim.candidateId,
+      decision: "rejected",
+      reviewer: "integration-test",
+      reason: "Fixture deliberately rejected.",
+    });
+
+    const [state] = await sql.unsafe<Array<{ reviewStatus: string; publications: number }>>(
+      `select
+         candidate.review_status as "reviewStatus",
+         count(publication.id)::integer as publications
+       from ingest.extraction_candidates candidate
+       left join catalogue.publications publication
+         on publication.approved_candidate_id = candidate.id
+       where candidate.id = $1
+       group by candidate.review_status`,
+      [claim.candidateId],
+    );
+    expect(state).toEqual({ reviewStatus: "rejected", publications: 0 });
   });
 
   it("publishes an approval and switches the active version atomically", async () => {

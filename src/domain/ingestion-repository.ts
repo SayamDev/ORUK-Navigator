@@ -5,6 +5,18 @@ export type CandidateIdentity = {
   rulesVersion: string;
   canonicalContentSha256: string;
   normalizedPayload: Record<string, unknown>;
+  warnings?: string[];
+  evidence?: CandidateEvidence[];
+};
+
+export type CandidateEvidence = {
+  fieldPath: string;
+  evidenceKind: "text" | "attribute" | "structured_value" | "hash";
+  sourceLocator: string;
+  normalizedExcerpt?: string;
+  valueSha256?: string;
+  transformationNote: string;
+  safetyFlags: string[];
 };
 
 export type CandidateClaim = {
@@ -38,7 +50,15 @@ export type ApprovalResult = {
   versionNumber: number;
 };
 
+export type ReviewDisposition = {
+  candidateId: string;
+  decision: "rejected" | "changes_requested";
+  reviewer: string;
+  reason: string;
+};
+
 export interface IngestionRepository {
   claimCandidate(candidate: CandidateIdentity): Promise<CandidateClaim>;
   approveCandidate(approval: PublicationApproval): Promise<ApprovalResult>;
+  recordDisposition(disposition: ReviewDisposition): Promise<void>;
 }

@@ -4,6 +4,7 @@ import type {
   CandidateIdentity,
   IngestionRepository,
   PublicationApproval,
+  ReviewDisposition,
 } from "@/domain/ingestion-repository";
 import type { Sql } from "postgres";
 
@@ -25,7 +26,8 @@ export class PostgresIngestionRepository implements IngestionRepository {
   constructor(private readonly sql: Sql) {}
 
   async claimCandidate(candidate: CandidateIdentity): Promise<CandidateClaim> {
-    const rows = await this.sql.unsafe<CandidateRow[]>(`
+    return this.sql.begin(async (transaction) => {
+      const rows = await transaction.unsafe<CandidateRow[]>(`
       with inserted as (
         insert into ingest.extraction_candidates (
           source_page_id,
@@ -34,10 +36,12 @@ export class PostgresIngestionRepository implements IngestionRepository {
           rules_version,
           canonical_content_sha256,
           normalized_payload,
-          outcome
+          outcome,
+          review_status,
+          warnings
         ) values (
           $1, $2, $3, $4, $5, $6::jsonb,
-          'candidate'
+          'candidate', 'pending_review', $7::jsonb
         )
         on conflict (
           source_page_id,
@@ -71,14 +75,77 @@ export class PostgresIngestionRepository implements IngestionRepository {
       candidate.rulesVersion,
       candidate.canonicalContentSha256,
       JSON.stringify(candidate.normalizedPayload),
-    ]);
-    const row = rows[0];
+      JSON.stringify(candidate.warnings ?? []),
+      ]);
+      const row = rows[0];
 
-    if (!row) {
-      throw new Error("Candidate claim did not return a row");
-    }
+      if (!row) {
+        throw new Error("Candidate claim did not return a row");
+      }
 
-    return row;
+      if (row.created) {
+        for (const evidence of candidate.evidence ?? []) {
+          await transaction.unsafe(
+            `insert into ingest.candidate_field_evidence (
+              candidate_id,
+              field_path,
+              evidence_kind,
+              source_locator,
+              normalized_excerpt,
+              value_sha256,
+              transformation_note,
+              safety_flags
+            ) values ($1, $2, $3, $4, $5, $6, $7, $8::text[])`,
+            [
+              row.candidateId,
+              evidence.fieldPath,
+              evidence.evidenceKind,
+              evidence.sourceLocator,
+              evidence.normalizedExcerpt ?? null,
+              evidence.valueSha256 ?? null,
+              evidence.transformationNote,
+              evidence.safetyFlags,
+            ],
+          );
+        }
+      }
+
+      return row;
+    });
+  }
+
+  async recordDisposition(disposition: ReviewDisposition): Promise<void> {
+    await this.sql.begin(async (transaction) => {
+      const rows = await transaction.unsafe<Array<{ reviewStatus: CandidateClaim["reviewStatus"] }>>(
+        `select review_status as "reviewStatus"
+         from ingest.extraction_candidates
+         where id = $1
+         for update`,
+        [disposition.candidateId],
+      );
+      const candidate = rows[0];
+      if (!candidate) throw new Error(`Candidate ${disposition.candidateId} does not exist`);
+      if (candidate.reviewStatus !== "pending_review") {
+        throw new Error(
+          `Candidate ${disposition.candidateId} is already ${candidate.reviewStatus}`,
+        );
+      }
+
+      await transaction.unsafe(
+        `insert into ingest.review_decisions (candidate_id, decision, reason, reviewer)
+         values ($1, $2, $3, $4)`,
+        [
+          disposition.candidateId,
+          disposition.decision,
+          disposition.reason,
+          disposition.reviewer,
+        ],
+      );
+      await transaction.unsafe(
+        `update ingest.extraction_candidates set review_status = $1 where id = $2`,
+        [disposition.decision, disposition.candidateId],
+      );
+    });
   }
 
   async approveCandidate(approval: PublicationApproval): Promise<ApprovalResult> {
