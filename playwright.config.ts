@@ -14,7 +14,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars pnpm build && DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars pnpm start",
+      "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars PUBLIC_CORRECTIONS_ENABLED=true CORRECTIONS_FALLBACK_OWNER=e2e-fallback CORRECTIONS_REVIEW_HOURS=e2e-review-hours pnpm build && DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars PUBLIC_CORRECTIONS_ENABLED=true CORRECTIONS_FALLBACK_OWNER=e2e-fallback CORRECTIONS_REVIEW_HOURS=e2e-review-hours pnpm start",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 30_000,
