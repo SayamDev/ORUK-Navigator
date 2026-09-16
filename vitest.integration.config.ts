@@ -3,10 +3,10 @@ import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   test: {
-    environment: "jsdom",
-    setupFiles: ["./vitest.setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
-    exclude: ["src/**/*.integration.test.ts"],
+    environment: "node",
+    include: ["src/**/*.integration.test.ts"],
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
   },
   resolve: {
     alias: {
@@ -14,3 +14,4 @@ export default defineConfig({
     },
   },
 });
+
