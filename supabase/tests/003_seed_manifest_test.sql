@@ -1,0 +1,71 @@
+begin;
+
+create extension if not exists pgtap with schema extensions;
+
+select plan(9);
+
+select results_eq(
+  $$select count(*)::bigint from ingest.sources where key = 'tmbc-web' and is_enabled$$,
+  array[1::bigint],
+  'the admitted Tameside source is enabled'
+);
+
+select results_eq(
+  $$select count(*)::bigint from ingest.source_licences where review_status = 'approved'$$,
+  array[1::bigint],
+  'one approved source licence is seeded'
+);
+
+select results_eq(
+  $$select count(*)::bigint from ingest.source_pages where admission_status = 'approved'$$,
+  array[5::bigint],
+  'five approved source pages are seeded'
+);
+
+select results_eq(
+  $$select count(*)::bigint from ingest.extraction_candidates where review_status = 'approved'$$,
+  array[5::bigint],
+  'five reviewed extraction candidates are seeded'
+);
+
+select results_eq(
+  $$select count(*)::bigint from catalogue.entries where lifecycle = 'active'$$,
+  array[5::bigint],
+  'five active catalogue entries are seeded'
+);
+
+select results_eq(
+  $$
+    select count(*)::bigint
+    from catalogue.entries e
+    join catalogue.publications p
+      on p.id = e.active_publication_id and p.entry_id = e.id
+  $$,
+  array[5::bigint],
+  'every seed entry activates its own publication'
+);
+
+select results_eq(
+  $$select count(*)::bigint from catalogue.source_actions where kind = 'authoritative_details'$$,
+  array[5::bigint],
+  'every seed publication has an authoritative source action'
+);
+
+select results_eq(
+  $$select count(*)::bigint from catalogue.search_documents$$,
+  array[5::bigint],
+  'every seed publication has a search document'
+);
+
+select results_eq(
+  $$
+    select count(*)::bigint
+    from catalogue.publications
+    where provider_name = 'Tameside Metropolitan Borough Council'
+  $$,
+  array[5::bigint],
+  'all seed publications retain the reviewed publisher'
+);
+
+select * from finish();
+rollback;

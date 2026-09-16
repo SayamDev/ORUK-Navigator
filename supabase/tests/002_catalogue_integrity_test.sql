@@ -39,7 +39,7 @@ insert into ingest.fetch_observations (
   response_content_type, response_bytes, duration_ms, raw_response_sha256,
   transport_outcome, is_contract_valid
 ) values (
-  (select id from ingest.ingestion_runs limit 1),
+  (select id from ingest.ingestion_runs where adapter_version = '1'),
   (select id from ingest.source_pages where key = 'test-page'),
   'https://example.test/service', 'https://example.test/service', 200,
   'text/html', 100, 25, repeat('a', 64), 'succeeded', true
@@ -50,7 +50,12 @@ insert into ingest.extraction_candidates (
   canonical_content_sha256, normalized_payload, outcome
 ) values (
   (select id from ingest.source_pages where key = 'test-page'),
-  (select id from ingest.fetch_observations limit 1),
+  (
+    select observation.id
+    from ingest.fetch_observations observation
+    join ingest.source_pages page on page.id = observation.source_page_id
+    where page.key = 'test-page'
+  ),
   '1', '1', repeat('b', 64), '{"name":"Test service"}'::jsonb, 'candidate'
 );
 
@@ -61,7 +66,12 @@ insert into catalogue.publications (
   provider_name, source_status, source_checked_at, completeness_band
 ) values (
   (select id from catalogue.entries where slug = 'test-service'),
-  (select id from ingest.extraction_candidates limit 1),
+  (
+    select candidate.id
+    from ingest.extraction_candidates candidate
+    join ingest.source_pages page on page.id = candidate.source_page_id
+    where page.key = 'test-page'
+  ),
   1, 'Test service', 'A reviewed test service.', 'Test publisher',
   'healthy', now(), 'partial'
 );
@@ -73,7 +83,8 @@ select throws_ok(
       canonical_content_sha256, normalized_payload, outcome
     ) select source_page_id, fetch_observation_id, adapter_version, rules_version,
       canonical_content_sha256, normalized_payload, outcome
-      from ingest.extraction_candidates limit 1
+      from ingest.extraction_candidates candidate
+      where candidate.adapter_version = '1'
   $$,
   '23505', null,
   'candidate identity is idempotent under replay'
@@ -82,7 +93,12 @@ select throws_ok(
 select throws_ok(
   $$
     update catalogue.entries
-    set active_publication_id = (select id from catalogue.publications limit 1)
+    set active_publication_id = (
+      select publication.id
+      from catalogue.publications publication
+      join catalogue.entries entry on entry.id = publication.entry_id
+      where entry.slug = 'test-service'
+    )
     where slug = 'another-service'
   $$,
   '23503', null,
@@ -104,9 +120,18 @@ select throws_ok(
 insert into ingest.review_decisions (
   candidate_id, decision, reason, reviewer, resulting_publication_id
 ) values (
-  (select id from ingest.extraction_candidates limit 1), 'approved',
+  (
+    select candidate.id
+    from ingest.extraction_candidates candidate
+    where candidate.adapter_version = '1'
+  ), 'approved',
   'Reviewed source evidence.', 'test-reviewer',
-  (select id from catalogue.publications limit 1)
+  (
+    select publication.id
+    from catalogue.publications publication
+    join catalogue.entries entry on entry.id = publication.entry_id
+    where entry.slug = 'test-service'
+  )
 );
 
 select throws_ok(
