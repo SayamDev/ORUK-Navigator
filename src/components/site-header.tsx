@@ -9,7 +9,7 @@ export function SiteHeader() {
           <span>ORUK <strong>Navigator</strong></span>
         </Link>
         <nav aria-label="Primary navigation">
-          <Link href="/">Find support</Link>
+          <Link href="/#find-support">Find support</Link>
           <Link href="/about">About the data</Link>
         </nav>
       </div>

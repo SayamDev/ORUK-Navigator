@@ -7,7 +7,7 @@ import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
-export const metadata: Metadata = { title: { default: "ORUK Navigator", template: "%s — ORUK Navigator" }, description: "Find local support that fits your needs." };
+export const metadata: Metadata = { title: { default: "ORUK Navigator", template: "%s - ORUK Navigator" }, description: "Find local support that fits your needs." };
 export const viewport: Viewport = { themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
