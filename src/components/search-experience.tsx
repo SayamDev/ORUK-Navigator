@@ -3,26 +3,41 @@
 import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 
-import { searchPrototypeServices, type PrototypeSearchResult } from "@/lib/search";
+import type { CatalogueService } from "@/domain/catalogue";
+import { classifyPilotLocation } from "@/lib/location";
+import { searchCatalogueServices, type CatalogueSearchResult } from "@/lib/search";
+import { sourceHealthMessage } from "@/lib/source-health";
 
-export function SearchExperience() {
-  const [results, setResults] = useState<PrototypeSearchResult[] | null>(null);
+export function SearchExperience({ services }: { services: CatalogueService[] }) {
+  const [results, setResults] = useState<CatalogueSearchResult[] | null>(null);
   const [need, setNeed] = useState("");
   const [place, setPlace] = useState("Ashton-under-Lyne");
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState<"need" | "place">("need");
   const summaryRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      if (!need.trim()) throw new Error("Tell us what support you are looking for.");
-      const next = searchPrototypeServices(need);
+      if (!need.trim()) {
+        setErrorField("need");
+        throw new Error("Tell us what support you are looking for.");
+      }
+      try {
+        classifyPilotLocation(place);
+      } catch (locationError) {
+        setErrorField("place");
+        throw locationError;
+      }
+      const next = searchCatalogueServices(need, services);
       setError("");
       setResults(next);
       window.requestAnimationFrame(() => summaryRef.current?.focus());
     } catch (caught) {
       setResults(null);
       setError(caught instanceof Error ? caught.message : "Check your search and try again.");
+      window.requestAnimationFrame(() => errorRef.current?.focus());
     }
   }
 
@@ -42,16 +57,16 @@ export function SearchExperience() {
 
       <main id="main-content" className="shell search-main">
         <form className="search-panel" onSubmit={submit} noValidate>
-          {error && <div className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong><a href="#need">{error}</a></div>}
+          {error && <div ref={errorRef} className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong><a href={`#${errorField}`}>{error}</a></div>}
           <div className="field">
             <label htmlFor="need">What support are you looking for?</label>
             <p id="need-hint">For example, “I need help with money and debt advice.”</p>
-            <textarea id="need" name="need" rows={3} maxLength={240} aria-describedby="need-hint" value={need} onChange={(event) => setNeed(event.target.value)} />
+            <textarea id="need" rows={3} maxLength={240} aria-describedby="need-hint" value={need} onChange={(event) => setNeed(event.target.value)} />
           </div>
           <div className="field">
             <label htmlFor="place">Where do you need support?</label>
             <p id="place-hint">Enter a town or postcode. This pilot is limited to Tameside.</p>
-            <input id="place" name="place" autoComplete="postal-code" aria-describedby="place-hint" value={place} onChange={(event) => setPlace(event.target.value)} />
+            <input id="place" autoComplete="postal-code" aria-describedby="place-hint" value={place} onChange={(event) => setPlace(event.target.value)} />
           </div>
           <button className="button button-primary" type="submit">Find support <span aria-hidden="true">→</span></button>
           <p className="privacy-note">Your search stays in this browser prototype and is not added to the page address.</p>
@@ -66,12 +81,13 @@ export function SearchExperience() {
             <p className="results-caveat">These are relevance matches, not eligibility or availability decisions. Check the publisher’s source before acting.</p>
             {results.length ? <div className="result-list">{results.map((service) => (
               <article className="result-card" key={service.slug}>
-                <p className="result-publisher">{service.publisher}</p>
+                <p className="result-publisher">{service.providerName}</p>
                 <h3><Link href={`/services/${service.slug}`}>{service.name}</Link></h3>
-                <p>{service.summary}</p>
-                <dl><div><dt>Area</dt><dd>{service.serviceArea}</dd></div><div><dt>Cost</dt><dd>{service.cost ?? "Information not provided"}</dd></div></dl>
+                <p>{service.description}</p>
+                {sourceHealthMessage(service.sourceStatus) && <p className="health-notice"><strong>Source check:</strong> {sourceHealthMessage(service.sourceStatus)}</p>}
+                <dl><div><dt>Area</dt><dd>{service.serviceArea}</dd></div><div><dt>Cost</dt><dd>{service.costSummary ?? "Information not provided"}</dd></div></dl>
                 <details><summary>Why this matched</summary><p>{service.matchReasons[0]}</p></details>
-                <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {service.checkedOn}</span></div>
+                <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {formatCheckedDate(service.sourceCheckedAt)}</span></div>
               </article>
             ))}</div> : <div className="empty-state"><h3>No reviewed matches found</h3><p>Try a more general description such as debt, housing or mental health. The pilot only contains five services.</p></div>}
           </section>
@@ -81,4 +97,13 @@ export function SearchExperience() {
       </main>
     </>
   );
+}
+
+function formatCheckedDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/London",
+  }).format(new Date(value));
 }

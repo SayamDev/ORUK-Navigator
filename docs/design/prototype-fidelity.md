@@ -32,7 +32,9 @@ This record captures the five-point comparison completed after rendering the imp
 
 ## 5. Responsive and interaction behaviour
 
-- Browser checks passed at 1280×720 and 390×844.
+- Repository-backed Playwright checks pass in isolated Chromium at 1280×720 and 390×844.
 - The 390px viewport has no horizontal overflow.
 - Inputs and actions retain at least 48px targets, visible labels, and keyboard focus styling.
-- The complete search → result → detail → report journey was exercised in-browser, including report validation and confirmation.
+- Keyboard submission moves focus to the result summary; the need and place never enter the URL.
+- The search → result → detail/provenance journey runs against the seeded private Postgres repository with a clean browser console.
+- Browser testing exposed and fixed a pre-hydration native-form privacy leak by ensuring sensitive fields have no serializable form names.
