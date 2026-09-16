@@ -26,3 +26,6 @@ test-results/
 # Editor-specific state
 .idea/
 .vscode/
+.vercel/
+.env.local
+.env.*.local
