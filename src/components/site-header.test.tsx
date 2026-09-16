@@ -6,22 +6,12 @@ import { SiteHeader } from "./site-header";
 afterEach(cleanup);
 
 describe("SiteHeader", () => {
-  it("uses the approved text wordmark and section navigation", () => {
-    const { container } = render(<SiteHeader />);
+  it("links Find support directly to the search form", () => {
+    render(<SiteHeader />);
 
-    expect(screen.getByRole("link", { name: "ORUK Navigator" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: "How it works" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Find support" })).toHaveAttribute(
       "href",
-      "/#how-it-works",
+      "/#find-support",
     );
-    expect(screen.getByRole("link", { name: "Data sources" })).toHaveAttribute(
-      "href",
-      "/about#data-sources",
-    );
-    expect(screen.getByRole("link", { name: "About this pilot" })).toHaveAttribute(
-      "href",
-      "/about#about-this-pilot",
-    );
-    expect(container.querySelector(".wordmark-mark")).not.toBeInTheDocument();
   });
 });

@@ -7,7 +7,7 @@ All notable public-facing changes are recorded here. The project follows semanti
 ### Added
 
 - Privacy-preserving local-support search over reviewed Tameside publications.
-- Contextual topic suggestions and an explicit support-type browser for people who do not know what support is available.
+- Visible common-search choices and contextual topic suggestions for people who do not know what support is available.
 - Source-backed service detail, provenance, correction reporting, and technical status journeys.
 - Private ingestion, catalogue, and operations schemas with immutable publication history.
 - CI release gates for code quality, database contracts, responsive browser journeys, accessibility, dependencies, and security headers.
@@ -16,9 +16,9 @@ All notable public-facing changes are recorded here. The project follows semanti
 
 ### Changed
 
-- Restored the approved ORUK Navigator homepage composition, brand typography, palette, route signature, navigation, and responsive layout.
-- Made the town or postcode field genuinely optional and removed the prefilled location.
-- Kept support types out of the default layout while surfacing relevant suggestions as people type.
+- Restored the approved information-rich ORUK Navigator homepage with its branded wordmark, coverage panel, prominent search card, and prefilled Ashton-under-Lyne pilot location.
+- Kept common support types visible and narrowed them to relevant suggestions as people type.
+- Directed the viewport and keyboard focus to **Support that may help** after a successful search, while respecting reduced-motion preferences.
 
 ### Security
 

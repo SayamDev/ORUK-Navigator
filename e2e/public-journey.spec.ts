@@ -12,10 +12,9 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
   page.on("pageerror", (error) => browserProblems.push(`pageerror: ${error.message}`));
 
   await page.goto("/", { waitUntil: "networkidle" });
-  await page.getByRole("link", { name: "How it works" }).click();
-  await expect(page).toHaveURL(/#how-it-works$/);
-  await expect(page.locator("#how-it-works")).toBeInViewport();
-  await page.getByRole("heading", { name: "Find support in Tameside" }).scrollIntoViewIfNeeded();
+  await page.getByRole("link", { name: "Find support" }).click();
+  await expect(page).toHaveURL(/#find-support$/);
+  await expect(page.locator("#find-support")).toBeInViewport();
 
   const need = page.getByLabel("What support are you looking for?");
   await need.focus();
@@ -25,16 +24,17 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
   await expect(need).toHaveValue("I need help with money and debt advice");
   await expect(need).toBeFocused();
 
-  await page.getByLabel("Town or postcode (optional)").focus();
-  await expect(page.getByLabel("Town or postcode (optional)")).toBeFocused();
+  await page.getByLabel("Where do you need support?").focus();
+  await expect(page.getByLabel("Where do you need support?")).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: /Find support/ })).toBeFocused();
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("heading", { name: "Support that may help" })).toBeVisible();
   await expect(page.locator(".results-heading-row")).toBeFocused();
+  await expect(page.locator(".results-heading-row")).toBeInViewport();
   await expect(page.locator(".result-card")).toHaveCount(3);
-  await expect(page).toHaveURL("http://localhost:3000/#how-it-works");
+  await expect(page).toHaveURL("http://localhost:3000/#find-support");
   expect(page.url()).not.toContain("money");
   expect(page.url()).not.toContain("Ashton");
 
