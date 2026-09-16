@@ -57,6 +57,7 @@ The working prototype includes:
 ### Search & AI
 
 - [Deterministic ranking and evaluation contract](docs/search.md)
+- [Measured semantic-search include/defer evaluation](docs/research/semantic-search-evaluation.md)
 - Search works without an LLM, paid embedding API, or vector database
 - AI and semantic retrieval remain optional behind interfaces and must demonstrate measurable value before inclusion
 
@@ -89,7 +90,7 @@ pnpm lint
 pnpm build
 ```
 
-The current checkpoint passes 9 unit/component tests, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
+The current checkpoint passes 19 unit/component/evaluation tests, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
 
 ### ADRs
 
@@ -97,6 +98,7 @@ The current checkpoint passes 9 unit/component tests, strict TypeScript checking
 - [ADR 0002 — private PostgreSQL domain boundary](docs/adr/0002-private-postgresql-domain-boundary.md)
 - [ADR 0003 — deterministic search baseline](docs/adr/0003-deterministic-search-baseline.md)
 - [ADR 0004 — minimal privacy-first operations](docs/adr/0004-minimal-privacy-first-operations.md)
+- [ADR 0005 — defer semantic search from v1](docs/adr/0005-defer-semantic-search.md)
 
 ## Current status
 
