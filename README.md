@@ -35,10 +35,11 @@ The working prototype includes:
 ### Architecture
 
 - [Domain and PostgreSQL persistence boundary](docs/data-model.md)
+- [Local database and migration workflow](docs/database.md)
 - [Source admission and ingestion contract](docs/ingestion.md)
 - [Operational support boundary](docs/operations.md)
 - Next.js App Router with TypeScript and React
-- Planned private PostgreSQL/Supabase schemas behind application repositories
+- Implemented private PostgreSQL/Supabase schemas behind server-only application repositories
 
 ### Product / UX
 
@@ -88,9 +89,11 @@ pnpm test
 pnpm typecheck
 pnpm lint
 pnpm build
+pnpm db:test
+pnpm test:repositories
 ```
 
-The current checkpoint passes 19 unit/component/evaluation tests, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
+The current checkpoint passes 19 unit/component/evaluation tests, 41 pgTAP database checks, four real-PostgreSQL repository integration scenarios, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
 
 ### ADRs
 
@@ -102,7 +105,7 @@ The current checkpoint passes 19 unit/component/evaluation tests, strict TypeScr
 
 ## Current status
 
-The discovery prototype and its core product/architecture decisions are complete, but the full production product is not finished. Key remaining work includes the real PostgreSQL schema and repositories, source adapters and review workflow, production correction persistence, automated ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
+The discovery prototype, core product/architecture decisions, and private PostgreSQL foundation are complete, but the full production product is not finished. Key remaining work includes source adapters and review workflow, wiring the public journey to the repository, production correction persistence, automated ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 
