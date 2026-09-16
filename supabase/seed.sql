@@ -194,3 +194,14 @@ select
   coalesce(publication.document ->> 'area', ''),
   '2026-09-16T00:00:00Z'
 from catalogue.publications publication;
+
+insert into catalogue.search_projection_jobs (
+  publication_id, status, attempt_count, last_attempted_at, projected_at
+)
+select
+  publication.id,
+  'succeeded',
+  1,
+  '2026-09-16T00:00:00Z',
+  '2026-09-16T00:00:00Z'
+from catalogue.publications publication;

@@ -37,6 +37,7 @@ The working prototype includes:
 - [Domain and PostgreSQL persistence boundary](docs/data-model.md)
 - [Local database and migration workflow](docs/database.md)
 - [Source admission and ingestion contract](docs/ingestion.md)
+- [Ingestion trust boundary and threat model](docs/security/ingestion-threat-model.md)
 - [Operational support boundary](docs/operations.md)
 - Next.js App Router with TypeScript and React
 - Implemented private PostgreSQL/Supabase schemas behind server-only application repositories
@@ -64,7 +65,7 @@ The working prototype includes:
 
 ### Automation
 
-- Ingestion is designed as allowlisted fetch → validation → extraction → review → immutable publication
+- Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
 - Scheduled-source health, correction retention, alerting, and recovery boundaries are defined in [operations](docs/operations.md)
 - CI/CD and deploy automation are upcoming implementation milestones
 
@@ -93,7 +94,7 @@ pnpm db:test
 pnpm test:repositories
 ```
 
-The current checkpoint passes 19 unit/component/evaluation tests, 41 pgTAP database checks, four real-PostgreSQL repository integration scenarios, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
+The current checkpoint passes 43 unit/component/evaluation/ingestion tests, 48 pgTAP database checks, nine real-PostgreSQL repository integration scenarios, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
 
 ### ADRs
 
@@ -105,7 +106,7 @@ The current checkpoint passes 19 unit/component/evaluation tests, 41 pgTAP datab
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, and private PostgreSQL foundation are complete, but the full production product is not finished. Key remaining work includes source adapters and review workflow, wiring the public journey to the repository, production correction persistence, automated ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, and reviewed Tameside ingestion workflow are complete, but the full production product is not finished. Key remaining work includes wiring the public journey to the repository, production correction persistence, scheduled ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

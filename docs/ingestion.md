@@ -1,6 +1,19 @@
 # Source admission and ingestion contract
 
-**Status:** accepted v1 decision
+**Status:** accepted v1 decision; pilot implementation complete
+
+## Implementation checkpoint
+
+The five-page Tameside pilot contract is implemented in `src/ingestion` and the private Postgres repositories:
+
+- repository-controlled, fail-closed source manifests;
+- bounded SSRF-aware transport with manual redirect validation, size/type/timeout/retry limits, and redacted failures;
+- deterministic non-executing extraction from independently authored fixtures;
+- canonical candidate identity, minimal field evidence, exclusions, and safety warnings;
+- persisted run, observation, health, review, immutable publication, withdrawal, and suspension transitions; and
+- durable idempotent search-projection jobs that do not roll back approval.
+
+See `docs/security/ingestion-threat-model.md` for the abuse cases, controls, residual DNS risk, and live-source launch gate. The implementation is not a scheduled production feed yet; deployment and monitoring remain issues #17 and #18.
 
 ## Purpose
 

@@ -23,13 +23,19 @@ select results_eq(
 );
 
 select results_eq(
-  $$select count(*)::bigint from ingest.extraction_candidates where review_status = 'approved'$$,
+  $$select count(*)::bigint from ingest.extraction_candidates where review_status = 'approved' and adapter_version = 'fixture-v1'$$,
   array[5::bigint],
   'five reviewed extraction candidates are seeded'
 );
 
 select results_eq(
-  $$select count(*)::bigint from catalogue.entries where lifecycle = 'active'$$,
+  $$
+    select count(*)::bigint
+    from catalogue.entries e
+    join catalogue.publications p on p.id = e.active_publication_id
+    join ingest.extraction_candidates c on c.id = p.approved_candidate_id
+    where e.lifecycle = 'active' and c.adapter_version = 'fixture-v1'
+  $$,
   array[5::bigint],
   'five active catalogue entries are seeded'
 );
@@ -40,6 +46,8 @@ select results_eq(
     from catalogue.entries e
     join catalogue.publications p
       on p.id = e.active_publication_id and p.entry_id = e.id
+    join ingest.extraction_candidates c on c.id = p.approved_candidate_id
+    where c.adapter_version = 'fixture-v1'
   $$,
   array[5::bigint],
   'every seed entry activates its own publication'
@@ -52,7 +60,13 @@ select results_eq(
 );
 
 select results_eq(
-  $$select count(*)::bigint from catalogue.search_documents$$,
+  $$
+    select count(*)::bigint
+    from catalogue.search_documents d
+    join catalogue.publications p on p.id = d.publication_id
+    join ingest.extraction_candidates c on c.id = p.approved_candidate_id
+    where c.adapter_version = 'fixture-v1'
+  $$,
   array[5::bigint],
   'every seed publication has a search document'
 );
