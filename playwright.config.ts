@@ -1,4 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { defineConfig, devices } from "@playwright/test";
+
+const testRunIdentity = randomUUID();
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,7 +14,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres pnpm dev",
+      "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars pnpm build && DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres CORRECTION_RATE_LIMIT_SECRET=e2e-only-rate-limit-secret-32-chars pnpm start",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 30_000,
@@ -19,11 +22,15 @@ export default defineConfig({
   projects: [
     {
       name: "desktop-chromium",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 720 } },
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 720 }, extraHTTPHeaders: { "x-vercel-forwarded-for": `${testRunIdentity}-desktop` } },
     },
     {
-      name: "mobile-chromium",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+      name: "mobile-390-chromium",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true, extraHTTPHeaders: { "x-vercel-forwarded-for": `${testRunIdentity}-390` } },
+    },
+    {
+      name: "mobile-320-chromium",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 320, height: 720 }, hasTouch: true, extraHTTPHeaders: { "x-vercel-forwarded-for": `${testRunIdentity}-320` } },
     },
   ],
 });

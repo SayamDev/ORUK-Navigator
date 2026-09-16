@@ -1,0 +1,120 @@
+name: Release gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "11.19.0"
+
+jobs:
+  quality:
+    name: Code quality & security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Activate pinned pnpm
+        run: corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Scan tracked files for secrets
+        run: pnpm security:secrets
+      - name: Lint
+        run: pnpm lint
+      - name: Type check
+        run: pnpm typecheck
+      - name: Unit and component tests
+        run: pnpm test
+      - name: Production build
+        run: pnpm build
+      - name: Production dependency audit
+        run: pnpm security:audit
+
+  database:
+    name: Database contracts & repositories
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Activate pinned pnpm
+        run: corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Start and verify local PostgreSQL
+        run: pnpm db:start && pnpm db:reset && pnpm db:test && pnpm db:lint && pnpm test:repositories
+      - name: Rebuild derived search projection
+        run: DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres pnpm search:rebuild --apply
+      - name: Rehearse backup restore
+        run: pnpm recovery:rehearse
+      - name: Stop local PostgreSQL
+        if: always()
+        run: pnpm exec supabase stop --no-backup
+
+  browser:
+    name: Browser, accessibility & headers
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Activate pinned pnpm
+        run: corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Start and seed local PostgreSQL
+        run: pnpm db:start && pnpm db:reset
+      - name: Run responsive browser and accessibility gates
+        run: pnpm test:e2e
+      - name: Stop local PostgreSQL
+        if: always()
+        run: pnpm exec supabase stop --no-backup
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
