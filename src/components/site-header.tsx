@@ -4,13 +4,11 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="shell header-inner">
-        <Link className="wordmark" href="/" aria-label="ORUK Navigator home">
-          <span className="wordmark-mark" aria-hidden="true"><i /><i /><i /></span>
-          <span>ORUK <strong>Navigator</strong></span>
-        </Link>
+        <Link className="wordmark" href="/">ORUK Navigator</Link>
         <nav aria-label="Primary navigation">
-          <Link href="/#find-support">Find support</Link>
-          <Link href="/about">About the data</Link>
+          <Link href="/#how-it-works">How it works</Link>
+          <Link href="/about#data-sources">Data sources</Link>
+          <Link href="/about#about-this-pilot">About this pilot</Link>
         </nav>
       </div>
     </header>
