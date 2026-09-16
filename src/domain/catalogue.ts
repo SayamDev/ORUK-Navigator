@@ -16,13 +16,21 @@ export type CatalogueAction = {
   url: string;
 };
 
+export type SourceHealth =
+  | "healthy"
+  | "changed"
+  | "stale"
+  | "unreachable"
+  | "invalid"
+  | "suspended";
+
 export type CatalogueService = {
   publicId: string;
   slug: string;
   name: string;
   description: string;
   providerName: string;
-  sourceStatus: string;
+  sourceStatus: SourceHealth;
   sourceCheckedAt: string;
   costSummary: string | null;
   accessSummary: string | null;

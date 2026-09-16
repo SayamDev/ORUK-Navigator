@@ -4,19 +4,32 @@ import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 
 import type { CatalogueService } from "@/domain/catalogue";
+import { classifyPilotLocation } from "@/lib/location";
 import { searchCatalogueServices, type CatalogueSearchResult } from "@/lib/search";
+import { sourceHealthMessage } from "@/lib/source-health";
 
 export function SearchExperience({ services }: { services: CatalogueService[] }) {
   const [results, setResults] = useState<CatalogueSearchResult[] | null>(null);
   const [need, setNeed] = useState("");
   const [place, setPlace] = useState("Ashton-under-Lyne");
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState<"need" | "place">("need");
   const summaryRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      if (!need.trim()) throw new Error("Tell us what support you are looking for.");
+      if (!need.trim()) {
+        setErrorField("need");
+        throw new Error("Tell us what support you are looking for.");
+      }
+      try {
+        classifyPilotLocation(place);
+      } catch (locationError) {
+        setErrorField("place");
+        throw locationError;
+      }
       const next = searchCatalogueServices(need, services);
       setError("");
       setResults(next);
@@ -24,6 +37,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
     } catch (caught) {
       setResults(null);
       setError(caught instanceof Error ? caught.message : "Check your search and try again.");
+      window.requestAnimationFrame(() => errorRef.current?.focus());
     }
   }
 
@@ -43,7 +57,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
 
       <main id="main-content" className="shell search-main">
         <form className="search-panel" onSubmit={submit} noValidate>
-          {error && <div className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong><a href="#need">{error}</a></div>}
+          {error && <div ref={errorRef} className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong><a href={`#${errorField}`}>{error}</a></div>}
           <div className="field">
             <label htmlFor="need">What support are you looking for?</label>
             <p id="need-hint">For example, “I need help with money and debt advice.”</p>
@@ -70,6 +84,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
                 <p className="result-publisher">{service.providerName}</p>
                 <h3><Link href={`/services/${service.slug}`}>{service.name}</Link></h3>
                 <p>{service.description}</p>
+                {sourceHealthMessage(service.sourceStatus) && <p className="health-notice"><strong>Source check:</strong> {sourceHealthMessage(service.sourceStatus)}</p>}
                 <dl><div><dt>Area</dt><dd>{service.serviceArea}</dd></div><div><dt>Cost</dt><dd>{service.costSummary ?? "Information not provided"}</dd></div></dl>
                 <details><summary>Why this matched</summary><p>{service.matchReasons[0]}</p></details>
                 <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {formatCheckedDate(service.sourceCheckedAt)}</span></div>

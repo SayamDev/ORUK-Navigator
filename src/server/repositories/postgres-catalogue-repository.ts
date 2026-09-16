@@ -14,7 +14,7 @@ const activeCatalogueQuery = `
     publication.name,
     publication.description,
     publication.provider_name as "providerName",
-    publication.source_status as "sourceStatus",
+    page.health as "sourceStatus",
     publication.source_checked_at::text as "sourceCheckedAt",
     publication.cost_summary as "costSummary",
     publication.access_summary as "accessSummary",
@@ -25,6 +25,10 @@ const activeCatalogueQuery = `
   from catalogue.entries entry
   join catalogue.publications publication
     on publication.id = entry.active_publication_id
+  join ingest.extraction_candidates candidate
+    on candidate.id = publication.approved_candidate_id
+  join ingest.source_pages page
+    on page.id = candidate.source_page_id
   left join lateral (
     select jsonb_agg(
       jsonb_build_object(
