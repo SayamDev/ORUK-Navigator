@@ -8,11 +8,11 @@
 | Responsibility | Named owner | Status |
 | --- | --- | --- |
 | Primary maintainer | SayamDev (`@SayamDev`) | Named |
-| Fallback maintainer | Must be supplied by the project owner | Launch blocker |
-| Monitored correction channel | GitHub Issues with `needs-triage`; account notifications must be enabled | Configuration check required |
-| Private security channel | GitHub private vulnerability reporting | Enablement check required |
+| Fallback maintainer | None named; the owner elected to keep public corrections disabled | Corrections disabled |
+| Monitored correction channel | GitHub Issues with `needs-triage` | Not activated while corrections are disabled |
+| Private security channel | GitHub private vulnerability reporting | Enabled |
 
-Do not launch corrections until the fallback owner and staffed review hours are recorded. Do not put personal information, correction free text, database URLs, or secrets in a GitHub issue.
+Do not launch corrections until a future owner names a fallback maintainer, records staffed review hours, and confirms notifications for the monitored role channel. Until then, keep the fail-closed environment configuration in place. Do not put personal information, correction free text, database URLs, or secrets in a GitHub issue.
 
 ## Why this delivery path
 
