@@ -19,6 +19,7 @@ test-results/
 # Local tooling
 .DS_Store
 *.log
+*.tsbuildinfo
 .vercel/
 .turbo/
 
