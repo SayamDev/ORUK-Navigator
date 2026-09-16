@@ -92,9 +92,10 @@ pnpm lint
 pnpm build
 pnpm db:test
 pnpm test:repositories
+pnpm test:e2e
 ```
 
-The current checkpoint passes 43 unit/component/evaluation/ingestion tests, 48 pgTAP database checks, nine real-PostgreSQL repository integration scenarios, strict TypeScript checking, ESLint, an optimized Next.js production build, and manual real-browser journey/responsive verification.
+The current checkpoint passes 52 unit/component/evaluation/ingestion tests, 48 pgTAP database checks, nine real-PostgreSQL repository integration scenarios, two isolated Chromium journeys, strict TypeScript checking, ESLint, and an optimized Next.js production build.
 
 ### ADRs
 
@@ -106,7 +107,7 @@ The current checkpoint passes 43 unit/component/evaluation/ingestion tests, 48 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, and reviewed Tameside ingestion workflow are complete, but the full production product is not finished. Key remaining work includes wiring the public journey to the repository, production correction persistence, scheduled ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, and repository-backed public journey are complete, but the full production product is not finished. Key remaining work includes production correction persistence, scheduled ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

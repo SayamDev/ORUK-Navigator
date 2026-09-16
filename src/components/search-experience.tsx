@@ -61,12 +61,12 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
           <div className="field">
             <label htmlFor="need">What support are you looking for?</label>
             <p id="need-hint">For example, “I need help with money and debt advice.”</p>
-            <textarea id="need" name="need" rows={3} maxLength={240} aria-describedby="need-hint" value={need} onChange={(event) => setNeed(event.target.value)} />
+            <textarea id="need" rows={3} maxLength={240} aria-describedby="need-hint" value={need} onChange={(event) => setNeed(event.target.value)} />
           </div>
           <div className="field">
             <label htmlFor="place">Where do you need support?</label>
             <p id="place-hint">Enter a town or postcode. This pilot is limited to Tameside.</p>
-            <input id="place" name="place" autoComplete="postal-code" aria-describedby="place-hint" value={place} onChange={(event) => setPlace(event.target.value)} />
+            <input id="place" autoComplete="postal-code" aria-describedby="place-hint" value={place} onChange={(event) => setPlace(event.target.value)} />
           </div>
           <button className="button button-primary" type="submit">Find support <span aria-hidden="true">→</span></button>
           <p className="privacy-note">Your search stays in this browser prototype and is not added to the page address.</p>
