@@ -5,6 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { CandidateIdentity, PublicationApproval } from "@/domain/ingestion-repository";
 import { PostgresCatalogueRepository } from "@/server/repositories/postgres-catalogue-repository";
 import { PostgresIngestionRepository } from "@/server/repositories/postgres-ingestion-repository";
+import {
+  CorrectionRateLimitError,
+  PostgresOperationsRepository,
+} from "@/server/repositories/postgres-operations-repository";
 
 const localDatabaseUrl =
   process.env.TEST_DATABASE_URL ??
@@ -13,11 +17,13 @@ const localDatabaseUrl =
 let sql: Sql;
 let catalogue: PostgresCatalogueRepository;
 let ingestion: PostgresIngestionRepository;
+let operations: PostgresOperationsRepository;
 
 beforeAll(() => {
   sql = postgres(localDatabaseUrl, { max: 2, transform: postgres.camel });
   catalogue = new PostgresCatalogueRepository(sql);
   ingestion = new PostgresIngestionRepository(sql);
+  operations = new PostgresOperationsRepository(sql);
 });
 
 afterAll(async () => {
@@ -414,7 +420,201 @@ describe("Postgres repository boundary", () => {
       publications: 1,
     });
   });
+
+  it("creates a non-sequential correction tied to the active immutable publication", async () => {
+    const target = await activeEntryFixture();
+    const receipt = await operations.submitCorrection({
+      entryPublicId: target.publicId,
+      category: "outdated",
+      detail: "Opening information appears old.",
+      abuseKeyHash: createHash("sha256").update(randomUUID()).digest("hex"),
+      correlationId: randomUUID(),
+    });
+
+    expect(receipt.reference).toMatch(/^[0-9a-f-]{36}$/);
+    const [stored] = await sql.unsafe<
+      Array<{ publicationId: string; state: string; transitionCount: number; eventCount: number }>
+    >(
+      `select
+         report.publication_id as "publicationId",
+         report.state,
+         count(distinct transition.id)::integer as "transitionCount",
+         count(distinct event.id)::integer as "eventCount"
+       from operations.correction_reports report
+       join operations.correction_transitions transition on transition.report_id = report.id
+       join operations.operational_events event on event.entity_id = report.public_reference::text
+       where report.public_reference = $1::uuid
+       group by report.publication_id, report.state`,
+      [receipt.reference],
+    );
+    expect(stored).toEqual({
+      publicationId: target.activePublicationId,
+      state: "new",
+      transitionCount: 1,
+      eventCount: 1,
+    });
+  });
+
+  it("rate limits a coarse keyed identity without storing the raw identity", async () => {
+    const target = await activeEntryFixture();
+    const keyHash = createHash("sha256").update(randomUUID()).digest("hex");
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await operations.submitCorrection({
+        entryPublicId: target.publicId,
+        category: "other",
+        detail: null,
+        abuseKeyHash: keyHash,
+        correlationId: randomUUID(),
+      });
+    }
+
+    await expect(
+      operations.submitCorrection({
+        entryPublicId: target.publicId,
+        category: "other",
+        detail: null,
+        abuseKeyHash: keyHash,
+        correlationId: randomUUID(),
+      }),
+    ).rejects.toBeInstanceOf(CorrectionRateLimitError);
+
+    const [window] = await sql.unsafe<Array<{ keyHash: string; requestCount: number }>>(
+      `select key_hash as "keyHash", request_count::integer as "requestCount"
+       from operations.abuse_windows where key_hash = $1`,
+      [keyHash],
+    );
+    expect(window).toEqual({ keyHash, requestCount: 6 });
+  });
+
+  it("records review transitions without mutating the referenced publication", async () => {
+    const target = await activeEntryFixture();
+    const before = await catalogue.findActiveBySlug(target.slug);
+    const receipt = await operations.submitCorrection({
+      entryPublicId: target.publicId,
+      category: "incorrect",
+      detail: "Please review the phone number.",
+      abuseKeyHash: createHash("sha256").update(randomUUID()).digest("hex"),
+      correlationId: randomUUID(),
+    });
+
+    await operations.transitionCorrection({
+      reference: receipt.reference,
+      toState: "triaged",
+      actor: "integration.tester",
+      reasonCode: "credible_report",
+      publicationId: target.activePublicationId,
+      correlationId: randomUUID(),
+    });
+    await operations.transitionCorrection({
+      reference: receipt.reference,
+      toState: "resolved",
+      actor: "integration.tester",
+      reasonCode: "source_confirmed",
+      outcomeCode: "no_change_required",
+      publicationId: target.activePublicationId,
+      correlationId: randomUUID(),
+    });
+
+    const after = await catalogue.findActiveBySlug(target.slug);
+    expect(after).toEqual(before);
+    const [history] = await sql.unsafe<Array<{ state: string; count: number }>>(
+      `select report.state, count(transition.id)::integer as count
+       from operations.correction_reports report
+       join operations.correction_transitions transition on transition.report_id = report.id
+       where report.public_reference = $1::uuid group by report.state`,
+      [receipt.reference],
+    );
+    expect(history).toEqual({ state: "resolved", count: 3 });
+    await expect(
+      sql.unsafe(
+        "update operations.correction_transitions set reason_code = 'rewritten' where report_id = (select id from operations.correction_reports where public_reference = $1::uuid)",
+        [receipt.reference],
+      ),
+    ).rejects.toThrow("immutable");
+  });
+
+  it("runs retention idempotently and deduplicates overdue-report alerts", async () => {
+    const target = await activeEntryFixture();
+    const receipt = await operations.submitCorrection({
+      entryPublicId: target.publicId,
+      category: "other",
+      detail: "Old report text",
+      abuseKeyHash: createHash("sha256").update(randomUUID()).digest("hex"),
+      correlationId: randomUUID(),
+    });
+    await sql.unsafe(
+      "update operations.correction_reports set created_at = $1 where public_reference = $2::uuid",
+      [new Date("2026-01-01T00:00:00Z"), receipt.reference],
+    );
+    const now = new Date("2026-09-16T12:00:00Z");
+
+    const first = await operations.runRetention(randomUUID(), now);
+    const replay = await operations.runRetention(randomUUID(), now);
+
+    expect(first.redactedOverdueDetails).toBe(1);
+    expect(replay.redactedOverdueDetails).toBe(0);
+    const [state] = await sql.unsafe<Array<{ detail: string | null; alerts: number }>>(
+      `select report.detail, count(alert.id)::integer as alerts
+       from operations.correction_reports report
+       left join operations.alerts alert
+         on alert.alert_key = 'correction_retention:' || report.id::text
+       where report.public_reference = $1::uuid
+       group by report.detail`,
+      [receipt.reference],
+    );
+    expect(state).toEqual({ detail: null, alerts: 1 });
+  });
+
+  it("deduplicates stale-source alerts and resolves the same alert on recovery", async () => {
+    const [page] = await sql.unsafe<Array<{ sourcePageId: string }>>(
+      `select id as "sourcePageId" from ingest.source_pages
+       where admission_status = 'approved' order by id limit 1`,
+    );
+    if (!page) throw new Error("Seeded source page was not found");
+    const staleAt = new Date("2026-01-01T00:00:00Z");
+    const now = new Date("2026-09-16T12:00:00Z");
+    await sql.unsafe(
+      "update ingest.source_pages set last_successful_fetch_at = $1, health = 'stale' where id = $2",
+      [staleAt, page.sourcePageId],
+    );
+
+    await operations.reconcileSourceAlerts(randomUUID(), now);
+    await operations.reconcileSourceAlerts(randomUUID(), now);
+    const [open] = await sql.unsafe<Array<{ state: string; occurrenceCount: number }>>(
+      `select state, occurrence_count::integer as "occurrenceCount"
+       from operations.alerts where alert_key = $1`,
+      [`source_stale:${page.sourcePageId}`],
+    );
+    expect(open).toEqual({ state: "open", occurrenceCount: 2 });
+
+    await sql.unsafe(
+      "update ingest.source_pages set last_successful_fetch_at = $1, health = 'healthy' where id = $2",
+      [now, page.sourcePageId],
+    );
+    await operations.reconcileSourceAlerts(randomUUID(), now);
+    const [resolved] = await sql.unsafe<Array<{ state: string; resolvedAt: Date | null }>>(
+      `select state, resolved_at as "resolvedAt"
+       from operations.alerts where alert_key = $1`,
+      [`source_stale:${page.sourcePageId}`],
+    );
+    expect(resolved?.state).toBe("resolved");
+    expect(resolved?.resolvedAt).not.toBeNull();
+  });
 });
+
+async function activeEntryFixture() {
+  const [entry] = await sql.unsafe<
+    Array<{ publicId: string; slug: string; activePublicationId: string }>
+  >(
+    `select public_id::text as "publicId", slug,
+       active_publication_id as "activePublicationId"
+     from catalogue.entries
+     where lifecycle = 'active'
+     order by id limit 1`,
+  );
+  if (!entry) throw new Error("Seeded active entry was not found");
+  return entry;
+}
 
 async function candidateFixture(seed: string): Promise<CandidateIdentity> {
   const [fixture] = await sql.unsafe<

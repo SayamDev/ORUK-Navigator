@@ -6,7 +6,7 @@
 
 ## Boundary
 
-The local stack uses PostgreSQL 17 through the pinned Supabase CLI. `ingest` and `catalogue` are private schemas and are not listed in the Supabase Data API schemas. Browser-capable components are lint-blocked from importing `src/server`; Next.js server code reaches the database through repository interfaces in `src/domain`.
+The local stack uses PostgreSQL 17 through the pinned Supabase CLI. `ingest`, `catalogue`, and `operations` are private schemas and are not listed in the Supabase Data API schemas. Browser-capable components are lint-blocked from importing `src/server`; Next.js server code reaches the database through repository interfaces in `src/domain`.
 
 Only `DATABASE_URL` configures the application connection. It must remain server-only and must never use the `NEXT_PUBLIC_` prefix. The checked-in `.env.example` contains local-development defaults, not a production credential.
 
@@ -68,7 +68,8 @@ For a migration already deployed to a shared environment, prefer a new reviewed 
 
 - `navigator_catalogue_reader` receives read access only to reviewed catalogue relations.
 - `navigator_ingest_writer` receives the narrow ingest/publication privileges needed by controlled jobs.
-- `anon`, `authenticated`, and `public` receive no access to either private schema.
+- `navigator_operations_writer` receives the correction, retention, and alert privileges needed by server-only operations.
+- `anon`, `authenticated`, and `public` receive no access to any private schema.
 - direct browser database access is intentionally absent.
 
 Production runtime roles will be granted through secret-managed connections when hosting is selected. Do not use the owner connection for ordinary runtime traffic.
