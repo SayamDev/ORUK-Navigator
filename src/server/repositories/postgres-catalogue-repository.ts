@@ -18,6 +18,7 @@ const activeCatalogueQuery = `
     publication.source_checked_at::text as "sourceCheckedAt",
     publication.cost_summary as "costSummary",
     publication.access_summary as "accessSummary",
+    coalesce(publication.document ->> 'area', '') as "serviceArea",
     publication.completeness_band as "completenessBand",
     coalesce(contact.contacts, '[]'::jsonb) as contacts,
     coalesce(action.actions, '[]'::jsonb) as actions

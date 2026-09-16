@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { normaliseNeed, searchPrototypeServices } from "./search";
+import type { CatalogueService } from "@/domain/catalogue";
+
+import { normaliseNeed, searchCatalogueServices } from "./search";
+
+const services: CatalogueService[] = [
+  service("welfare-rights", "Welfare Rights", "Free advice about benefits, debt and related support."),
+  service("debt-advice", "Debt Advice", "Council debt advice, including mortgage and rent arrears."),
+  service("crisis-payments", "Crisis Payments", "Short-term help during an immediate financial crisis."),
+  service("tameside-homelessness-service", "Tameside Homelessness Service", "Help when homeless or at risk of losing a home."),
+  service("adult-mental-health-services", "Adult Mental Health Services", "Adult social-care mental-health support."),
+];
 
 describe("normaliseNeed", () => {
   it("normalises Unicode and collapses whitespace", () => {
@@ -14,9 +24,9 @@ describe("normaliseNeed", () => {
   });
 });
 
-describe("searchPrototypeServices", () => {
+describe("searchCatalogueServices", () => {
   it("returns reviewed debt services with field-backed reasons", () => {
-    const results = searchPrototypeServices("money and debt advice");
+    const results = searchCatalogueServices("money and debt advice", services);
 
     expect(results.map((result) => result.slug)).toEqual([
       "welfare-rights",
@@ -24,11 +34,29 @@ describe("searchPrototypeServices", () => {
       "crisis-payments",
     ]);
     expect(results[0]?.matchReasons).toContain(
-      "The service description mentions debt advice.",
+      "The reviewed service information mentions debt support.",
     );
   });
 
   it("does not invent a match when the limited catalogue has none", () => {
-    expect(searchPrototypeServices("pet grooming")).toEqual([]);
+    expect(searchCatalogueServices("pet grooming", services)).toEqual([]);
   });
 });
+
+function service(slug: string, name: string, description: string): CatalogueService {
+  return {
+    publicId: slug,
+    slug,
+    name,
+    description,
+    providerName: "Tameside Metropolitan Borough Council",
+    sourceStatus: "healthy",
+    sourceCheckedAt: "2026-09-15T22:09:00Z",
+    costSummary: null,
+    accessSummary: "Check the council source.",
+    serviceArea: "Tameside",
+    completenessBand: "partial",
+    contacts: [],
+    actions: [],
+  };
+}

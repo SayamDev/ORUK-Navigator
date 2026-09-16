@@ -26,6 +26,7 @@ export type CatalogueService = {
   sourceCheckedAt: string;
   costSummary: string | null;
   accessSummary: string | null;
+  serviceArea: string;
   completenessBand: "good" | "partial" | "limited";
   contacts: CatalogueContact[];
   actions: CatalogueAction[];

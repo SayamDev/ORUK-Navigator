@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 
-import { searchPrototypeServices, type PrototypeSearchResult } from "@/lib/search";
+import type { CatalogueService } from "@/domain/catalogue";
+import { searchCatalogueServices, type CatalogueSearchResult } from "@/lib/search";
 
-export function SearchExperience() {
-  const [results, setResults] = useState<PrototypeSearchResult[] | null>(null);
+export function SearchExperience({ services }: { services: CatalogueService[] }) {
+  const [results, setResults] = useState<CatalogueSearchResult[] | null>(null);
   const [need, setNeed] = useState("");
   const [place, setPlace] = useState("Ashton-under-Lyne");
   const [error, setError] = useState("");
@@ -16,7 +17,7 @@ export function SearchExperience() {
     event.preventDefault();
     try {
       if (!need.trim()) throw new Error("Tell us what support you are looking for.");
-      const next = searchPrototypeServices(need);
+      const next = searchCatalogueServices(need, services);
       setError("");
       setResults(next);
       window.requestAnimationFrame(() => summaryRef.current?.focus());
@@ -66,12 +67,12 @@ export function SearchExperience() {
             <p className="results-caveat">These are relevance matches, not eligibility or availability decisions. Check the publisher’s source before acting.</p>
             {results.length ? <div className="result-list">{results.map((service) => (
               <article className="result-card" key={service.slug}>
-                <p className="result-publisher">{service.publisher}</p>
+                <p className="result-publisher">{service.providerName}</p>
                 <h3><Link href={`/services/${service.slug}`}>{service.name}</Link></h3>
-                <p>{service.summary}</p>
-                <dl><div><dt>Area</dt><dd>{service.serviceArea}</dd></div><div><dt>Cost</dt><dd>{service.cost ?? "Information not provided"}</dd></div></dl>
+                <p>{service.description}</p>
+                <dl><div><dt>Area</dt><dd>{service.serviceArea}</dd></div><div><dt>Cost</dt><dd>{service.costSummary ?? "Information not provided"}</dd></div></dl>
                 <details><summary>Why this matched</summary><p>{service.matchReasons[0]}</p></details>
-                <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {service.checkedOn}</span></div>
+                <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {formatCheckedDate(service.sourceCheckedAt)}</span></div>
               </article>
             ))}</div> : <div className="empty-state"><h3>No reviewed matches found</h3><p>Try a more general description such as debt, housing or mental health. The pilot only contains five services.</p></div>}
           </section>
@@ -81,4 +82,13 @@ export function SearchExperience() {
       </main>
     </>
   );
+}
+
+function formatCheckedDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/London",
+  }).format(new Date(value));
 }
