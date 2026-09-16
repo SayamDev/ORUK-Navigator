@@ -79,4 +79,3 @@ function normalizeRow(row: CatalogueRow): CatalogueService {
     actions: row.actions ?? [],
   };
 }
-

@@ -1,7 +1,7 @@
 # Private PostgreSQL development and migration workflow
 
-**Status:** implemented local foundation  
-**Last verified:** 16 September 2026  
+**Status:** implemented local foundation
+**Last verified:** 16 September 2026
 **Related:** GitHub issue #14, ADR 0002, `docs/data-model.md`
 
 ## Boundary
@@ -72,4 +72,3 @@ For a migration already deployed to a shared environment, prefer a new reviewed 
 - direct browser database access is intentionally absent.
 
 Production runtime roles will be granted through secret-managed connections when hosting is selected. Do not use the owner connection for ordinary runtime traffic.
-

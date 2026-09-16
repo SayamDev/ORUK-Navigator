@@ -30,4 +30,3 @@ export type CatalogueService = {
   contacts: CatalogueContact[];
   actions: CatalogueAction[];
 };
-

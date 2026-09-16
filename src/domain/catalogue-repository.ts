@@ -4,4 +4,3 @@ export interface CatalogueRepository {
   listActive(): Promise<CatalogueService[]>;
   findActiveBySlug(slug: string): Promise<CatalogueService | null>;
 }
-

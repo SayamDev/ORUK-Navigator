@@ -20,4 +20,3 @@ export function getDatabase(): Sql {
 
   return client;
 }
-
