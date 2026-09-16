@@ -289,6 +289,131 @@ describe("Postgres repository boundary", () => {
     expect(candidate?.reviewStatus).toBe("pending_review");
     expect(entry?.count).toBe(0);
   });
+
+  it("publishes a reviewed withdrawal while retaining immutable history", async () => {
+    const suffix = randomUUID();
+    const slug = `withdrawal-${suffix}`;
+    const first = await ingestion.claimCandidate(await candidateFixture(`${suffix}-active`));
+    const active = await ingestion.approveCandidate(approvalFixture(first.candidateId, slug));
+    const second = await ingestion.claimCandidate(await candidateFixture(`${suffix}-withdrawn`));
+    const withdrawnApproval = approvalFixture(second.candidateId, slug);
+    withdrawnApproval.publication.publicationState = "withdrawn";
+    const withdrawn = await ingestion.approveCandidate(withdrawnApproval);
+
+    const [state] = await sql.unsafe<
+      Array<{ lifecycle: string; activePublicationId: string; publications: number }>
+    >(
+      `select
+         entry.lifecycle,
+         entry.active_publication_id as "activePublicationId",
+         count(publication.id)::integer as publications
+       from catalogue.entries entry
+       join catalogue.publications publication on publication.entry_id = entry.id
+       where entry.id = $1
+       group by entry.lifecycle, entry.active_publication_id`,
+      [active.entryId],
+    );
+    expect(state).toEqual({
+      lifecycle: "withdrawn",
+      activePublicationId: withdrawn.publicationId,
+      publications: 2,
+    });
+    expect(await catalogue.findActiveBySlug(slug)).toBeNull();
+  });
+
+  it("suspends a source and its active entries without deleting history", async () => {
+    const suffix = randomUUID();
+    const sourceRows = await sql.unsafe<Array<{ sourceId: string }>>(
+      `insert into ingest.sources (
+         key, name, publisher_name, source_type, base_url, adapter_key,
+         adapter_version, admission_status, is_enabled
+       ) values ($1, 'Integration source', 'Integration publisher', 'curated_html',
+         'https://example.gov.uk', 'integration', 'integration-v1', 'approved', true)
+       returning id as "sourceId"`,
+      [`integration-${suffix}`],
+    );
+    const sourceId = sourceRows[0]?.sourceId;
+    if (!sourceId) throw new Error("Integration source was not created");
+    const pageRows = await sql.unsafe<Array<{ sourcePageId: string }>>(
+      `insert into ingest.source_pages (
+         source_id, key, canonical_url, adapter_version, rules_version,
+         geographic_scope, refresh_interval, freshness_window, timeout_ms,
+         max_response_bytes, admission_status, health
+       ) values ($1, 'page', 'https://example.gov.uk/page', 'integration-v1',
+         'integration-v1', 'Test only', interval '7 days', interval '14 days',
+         1000, 4096, 'approved', 'healthy')
+       returning id as "sourcePageId"`,
+      [sourceId],
+    );
+    const sourcePageId = pageRows[0]?.sourcePageId;
+    if (!sourcePageId) throw new Error("Integration source page was not created");
+    const run = await ingestion.beginRun({
+      trigger: "replay",
+      adapterVersion: "integration-v1",
+      rulesVersion: "integration-v1",
+    });
+    const observationId = await ingestion.recordPageCheck({
+      runId: run.runId,
+      sourcePageId,
+      requestedUrl: "https://example.gov.uk/page",
+      finalUrl: "https://example.gov.uk/page",
+      httpStatus: 200,
+      responseContentType: "text/html",
+      responseBytes: 10,
+      durationMs: 1,
+      retrievedAt: new Date("2026-09-16T02:00:00Z"),
+      rawResponseSha256: createHash("sha256").update(suffix).digest("hex"),
+      transportOutcome: "succeeded",
+      isContractValid: true,
+      retryCount: 0,
+      health: "changed",
+    });
+    const claim = await ingestion.claimCandidate({
+      sourcePageId,
+      fetchObservationId: observationId,
+      adapterVersion: "integration-v1",
+      rulesVersion: "integration-v1",
+      canonicalContentSha256: createHash("sha256").update(`${suffix}-candidate`).digest("hex"),
+      normalizedPayload: { fixture: true },
+    });
+    const approval = await ingestion.approveCandidate(
+      approvalFixture(claim.candidateId, `suspension-${suffix}`),
+    );
+
+    expect(await ingestion.suspendSource(sourceId)).toBe(1);
+
+    const [state] = await sql.unsafe<
+      Array<{
+        admissionStatus: string;
+        enabled: boolean;
+        health: string;
+        lifecycle: string;
+        publications: number;
+      }>
+    >(
+      `select
+         source.admission_status as "admissionStatus",
+         source.is_enabled as enabled,
+         page.health,
+         entry.lifecycle,
+         count(publication.id)::integer as publications
+       from ingest.sources source
+       join ingest.source_pages page on page.source_id = source.id
+       join ingest.extraction_candidates candidate on candidate.source_page_id = page.id
+       join catalogue.publications publication on publication.approved_candidate_id = candidate.id
+       join catalogue.entries entry on entry.id = publication.entry_id
+       where source.id = $1 and entry.id = $2
+       group by source.admission_status, source.is_enabled, page.health, entry.lifecycle`,
+      [sourceId, approval.entryId],
+    );
+    expect(state).toEqual({
+      admissionStatus: "suspended",
+      enabled: false,
+      health: "suspended",
+      lifecycle: "suspended",
+      publications: 1,
+    });
+  });
 });
 
 async function candidateFixture(seed: string): Promise<CandidateIdentity> {

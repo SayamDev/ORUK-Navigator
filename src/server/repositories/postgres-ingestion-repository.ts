@@ -199,13 +199,14 @@ export class PostgresIngestionRepository implements IngestionRepository {
           source_checked_at,
           completeness_band,
           completeness_inputs,
-          document
+          document,
+          publication_state
         )
         select
           $1,
           $2,
           coalesce(max(version_number), 0) + 1,
-          $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb
+          $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13
         from catalogue.publications
         where entry_id = $1
         returning id as "publicationId", version_number as "versionNumber"
@@ -222,6 +223,7 @@ export class PostgresIngestionRepository implements IngestionRepository {
         approval.publication.completenessBand,
         JSON.stringify(approval.publication.completenessInputs),
         JSON.stringify(approval.publication.document),
+        approval.publication.publicationState ?? "active",
       ]);
       const publication = publicationRows[0];
 
@@ -250,11 +252,15 @@ export class PostgresIngestionRepository implements IngestionRepository {
       await transaction.unsafe(`
         update catalogue.entries
         set
-          lifecycle = 'active',
+          lifecycle = $3,
           active_publication_id = $1,
           updated_at = now()
         where id = $2
-      `, [publication.publicationId, entry.entryId]);
+      `, [
+        publication.publicationId,
+        entry.entryId,
+        approval.publication.publicationState ?? "active",
+      ]);
 
       await transaction.unsafe(
         `insert into catalogue.search_projection_jobs (publication_id)
@@ -418,5 +424,39 @@ export class PostgresIngestionRepository implements IngestionRepository {
       );
       throw error;
     }
+  }
+
+  async suspendSource(sourceId: string): Promise<number> {
+    return this.sql.begin(async (transaction) => {
+      const sources = await transaction.unsafe<Array<{ id: string }>>(
+        `update ingest.sources
+         set admission_status = 'suspended', is_enabled = false, updated_at = now()
+         where id = $1
+         returning id`,
+        [sourceId],
+      );
+      if (!sources[0]) throw new Error(`Source ${sourceId} does not exist`);
+
+      await transaction.unsafe(
+        `update ingest.source_pages
+         set admission_status = 'suspended', health = 'suspended', updated_at = now()
+         where source_id = $1`,
+        [sourceId],
+      );
+      const entries = await transaction.unsafe<Array<{ id: string }>>(
+        `update catalogue.entries entry
+         set lifecycle = 'suspended', updated_at = now()
+         from catalogue.publications publication
+         join ingest.extraction_candidates candidate
+           on candidate.id = publication.approved_candidate_id
+         join ingest.source_pages page on page.id = candidate.source_page_id
+         where entry.active_publication_id = publication.id
+           and page.source_id = $1
+           and entry.lifecycle <> 'suspended'
+         returning entry.id`,
+        [sourceId],
+      );
+      return entries.length;
+    });
   }
 }

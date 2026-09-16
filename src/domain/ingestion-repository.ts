@@ -41,6 +41,7 @@ export type PublicationApproval = {
     completenessBand: "good" | "partial" | "limited";
     completenessInputs: Record<string, boolean>;
     document: Record<string, unknown>;
+    publicationState?: "active" | "withdrawn" | "suspended";
   };
 };
 
@@ -89,7 +90,7 @@ export type RunCompletion = {
   changedCount: number;
   rejectedCount: number;
   failedCount: number;
-  summary: Record<string, string | number | boolean>;
+  summary: Record<string, number | boolean>;
 };
 
 export interface IngestionRepository {
@@ -104,4 +105,5 @@ export interface IngestionRepository {
   recordPageCheck(check: PageCheckRecord): Promise<string>;
   finishRun(completion: RunCompletion): Promise<void>;
   projectPublication(publicationId: string): Promise<void>;
+  suspendSource(sourceId: string): Promise<number>;
 }
