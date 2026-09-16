@@ -15,10 +15,14 @@ export function getDatabase(): Sql {
   if (!Number.isInteger(configuredPoolSize) || configuredPoolSize < 1 || configuredPoolSize > 10) {
     throw new Error("DATABASE_POOL_SIZE must be an integer between 1 and 10");
   }
+  const prepareSetting = process.env.DATABASE_PREPARE ?? "true";
+  if (prepareSetting !== "true" && prepareSetting !== "false") {
+    throw new Error("DATABASE_PREPARE must be either true or false");
+  }
 
   client ??= postgres(databaseUrl, {
     max: configuredPoolSize,
-    prepare: process.env.DATABASE_PREPARE !== "false",
+    prepare: prepareSetting === "true",
     idle_timeout: 20,
     connect_timeout: 10,
     transform: postgres.camel,
