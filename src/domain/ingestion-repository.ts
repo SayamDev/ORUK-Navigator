@@ -57,8 +57,51 @@ export type ReviewDisposition = {
   reason: string;
 };
 
+export type IngestionRun = {
+  runId: string;
+  runPublicId: string;
+};
+
+export type PageCheckRecord = {
+  runId: string;
+  sourcePageId: string;
+  requestedUrl: string;
+  finalUrl?: string;
+  httpStatus?: number;
+  responseContentType?: string;
+  responseBytes?: number;
+  durationMs: number;
+  retrievedAt: Date;
+  rawResponseSha256?: string;
+  transportOutcome: "succeeded" | "timeout" | "dns_error" | "connection_error" | "rejected";
+  errorCode?: string;
+  isContractValid: boolean;
+  retryCount: number;
+  health: "healthy" | "changed" | "stale" | "unreachable" | "invalid" | "suspended";
+};
+
+export type RunCompletion = {
+  runId: string;
+  status: "succeeded" | "succeeded_with_warnings" | "failed";
+  consideredCount: number;
+  skippedCount: number;
+  unchangedCount: number;
+  changedCount: number;
+  rejectedCount: number;
+  failedCount: number;
+  summary: Record<string, string | number | boolean>;
+};
+
 export interface IngestionRepository {
   claimCandidate(candidate: CandidateIdentity): Promise<CandidateClaim>;
   approveCandidate(approval: PublicationApproval): Promise<ApprovalResult>;
   recordDisposition(disposition: ReviewDisposition): Promise<void>;
+  beginRun(input: {
+    trigger: "scheduled" | "manual" | "replay";
+    adapterVersion: string;
+    rulesVersion: string;
+  }): Promise<IngestionRun>;
+  recordPageCheck(check: PageCheckRecord): Promise<string>;
+  finishRun(completion: RunCompletion): Promise<void>;
+  projectPublication(publicationId: string): Promise<void>;
 }

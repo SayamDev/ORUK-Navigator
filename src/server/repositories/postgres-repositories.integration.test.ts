@@ -103,9 +103,170 @@ describe("Postgres repository boundary", () => {
       sourceStatus: "healthy",
     });
 
+    const [pendingJob] = await sql.unsafe<Array<{ status: string; count: number }>>(
+      `select job.status, count(document.publication_id)::integer as count
+       from catalogue.search_projection_jobs job
+       left join catalogue.search_documents document
+         on document.publication_id = job.publication_id
+       where job.publication_id = $1
+       group by job.status`,
+      [result.publicationId],
+    );
+    expect(pendingJob).toEqual({ status: "pending", count: 0 });
+
+    await ingestion.projectPublication(result.publicationId);
+    await ingestion.projectPublication(result.publicationId);
+
+    const [projectedJob] = await sql.unsafe<
+      Array<{ status: string; attemptCount: number; count: number }>
+    >(
+      `select
+         job.status,
+         job.attempt_count as "attemptCount",
+         count(document.publication_id)::integer as count
+       from catalogue.search_projection_jobs job
+       left join catalogue.search_documents document
+         on document.publication_id = job.publication_id
+       where job.publication_id = $1
+       group by job.status, job.attempt_count`,
+      [result.publicationId],
+    );
+    expect(projectedJob).toEqual({ status: "succeeded", attemptCount: 2, count: 1 });
+
     await expect(ingestion.approveCandidate(approval)).rejects.toThrow(
       `Candidate ${claim.candidateId} is already approved`,
     );
+  });
+
+  it("keeps an approved publication active when projection fails, then retries safely", async () => {
+    const suffix = randomUUID();
+    const claim = await ingestion.claimCandidate(await candidateFixture(suffix));
+    const approval = approvalFixture(claim.candidateId, `projection-${suffix}`);
+    const result = await ingestion.approveCandidate(approval);
+
+    await sql.unsafe(`
+      create or replace function pg_temp.reject_test_projection()
+      returns trigger language plpgsql as $$
+      begin
+        raise exception 'induced projection failure';
+      end
+      $$
+    `);
+    await sql.unsafe(`
+      create trigger integration_reject_projection
+      before insert on catalogue.search_documents
+      for each row execute function pg_temp.reject_test_projection()
+    `);
+
+    try {
+      await expect(ingestion.projectPublication(result.publicationId)).rejects.toThrow(
+        "induced projection failure",
+      );
+    } finally {
+      await sql.unsafe(
+        "drop trigger if exists integration_reject_projection on catalogue.search_documents",
+      );
+    }
+
+    const [afterFailure] = await sql.unsafe<
+      Array<{ activePublicationId: string; publications: number; jobStatus: string }>
+    >(
+      `select
+         entry.active_publication_id as "activePublicationId",
+         count(publication.id)::integer as publications,
+         job.status as "jobStatus"
+       from catalogue.entries entry
+       join catalogue.publications publication on publication.entry_id = entry.id
+       join catalogue.search_projection_jobs job on job.publication_id = publication.id
+       where entry.id = $1
+       group by entry.active_publication_id, job.status`,
+      [result.entryId],
+    );
+    expect(afterFailure).toEqual({
+      activePublicationId: result.publicationId,
+      publications: 1,
+      jobStatus: "failed",
+    });
+
+    await ingestion.projectPublication(result.publicationId);
+    const [afterRetry] = await sql.unsafe<Array<{ status: string; count: number }>>(
+      `select job.status, count(document.publication_id)::integer as count
+       from catalogue.search_projection_jobs job
+       left join catalogue.search_documents document
+         on document.publication_id = job.publication_id
+       where job.publication_id = $1
+       group by job.status`,
+      [result.publicationId],
+    );
+    expect(afterRetry).toEqual({ status: "succeeded", count: 1 });
+  });
+
+  it("records an unreachable source without changing its active publication", async () => {
+    const [before] = await sql.unsafe<
+      Array<{ sourcePageId: string; activePublicationId: string }>
+    >(`
+      select
+        page.id as "sourcePageId",
+        entry.active_publication_id as "activePublicationId"
+      from ingest.source_pages page
+      join ingest.extraction_candidates candidate on candidate.source_page_id = page.id
+      join catalogue.publications publication on publication.approved_candidate_id = candidate.id
+      join catalogue.entries entry on entry.id = publication.entry_id
+      where page.key = 'welfare-rights'
+      limit 1
+    `);
+    if (!before) throw new Error("Seeded publication was not found");
+    const run = await ingestion.beginRun({
+      trigger: "replay",
+      adapterVersion: "integration-v1",
+      rulesVersion: "integration-v1",
+    });
+
+    await ingestion.recordPageCheck({
+      runId: run.runId,
+      sourcePageId: before.sourcePageId,
+      requestedUrl: "https://www.tameside.gov.uk/counciltaxandbenefits/welfarerights",
+      durationMs: 100,
+      retrievedAt: new Date("2026-09-16T01:00:00Z"),
+      transportOutcome: "timeout",
+      errorCode: "timeout",
+      isContractValid: false,
+      retryCount: 1,
+      health: "unreachable",
+    });
+    await ingestion.finishRun({
+      runId: run.runId,
+      status: "succeeded_with_warnings",
+      consideredCount: 1,
+      skippedCount: 0,
+      unchangedCount: 0,
+      changedCount: 0,
+      rejectedCount: 0,
+      failedCount: 1,
+      summary: { timeout: 1 },
+    });
+
+    const [after] = await sql.unsafe<
+      Array<{ health: string; activePublicationId: string; runStatus: string }>
+    >(
+      `select
+         page.health,
+         entry.active_publication_id as "activePublicationId",
+         run.status as "runStatus"
+       from ingest.source_pages page
+       join ingest.extraction_candidates candidate on candidate.source_page_id = page.id
+       join catalogue.publications publication on publication.approved_candidate_id = candidate.id
+       join catalogue.entries entry on entry.id = publication.entry_id
+       join ingest.ingestion_runs run on run.id = $2
+       where page.id = $1
+       limit 1`,
+      [before.sourcePageId, run.runId],
+    );
+    expect(after).toEqual({
+      health: "unreachable",
+      activePublicationId: before.activePublicationId,
+      runStatus: "succeeded_with_warnings",
+    });
   });
 
   it("rolls back entry creation when a later publication write fails", async () => {

@@ -5,7 +5,7 @@ import { assertAdmittedSource, type SourceManifestEntry } from "@/ingestion/sour
 
 type DnsAddress = { address: string; family: number };
 
-type FetchDependencies = {
+export type FetchDependencies = {
   fetch?: typeof fetch;
   lookup?: (hostname: string) => Promise<DnsAddress[]>;
   sleep?: (milliseconds: number) => Promise<void>;

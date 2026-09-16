@@ -2,8 +2,11 @@ import type {
   ApprovalResult,
   CandidateClaim,
   CandidateIdentity,
+  IngestionRun,
   IngestionRepository,
+  PageCheckRecord,
   PublicationApproval,
+  RunCompletion,
   ReviewDisposition,
 } from "@/domain/ingestion-repository";
 import type { Sql } from "postgres";
@@ -253,25 +256,12 @@ export class PostgresIngestionRepository implements IngestionRepository {
         where id = $2
       `, [publication.publicationId, entry.entryId]);
 
-      await transaction.unsafe(`
-        insert into catalogue.search_documents (
-          publication_id,
-          entry_id,
-          name,
-          provider_name,
-          description,
-          classification_text
-        ) values (
-          $1, $2, $3, $4, $5, $6
-        )
-      `, [
-        publication.publicationId,
-        entry.entryId,
-        approval.publication.name,
-        approval.publication.providerName,
-        approval.publication.description,
-        String(approval.publication.document.area ?? ""),
-      ]);
+      await transaction.unsafe(
+        `insert into catalogue.search_projection_jobs (publication_id)
+         values ($1)
+         on conflict (publication_id) do nothing`,
+        [publication.publicationId],
+      );
 
       return {
         entryId: entry.entryId,
@@ -279,5 +269,154 @@ export class PostgresIngestionRepository implements IngestionRepository {
         versionNumber: publication.versionNumber,
       };
     });
+  }
+
+  async beginRun(input: {
+    trigger: "scheduled" | "manual" | "replay";
+    adapterVersion: string;
+    rulesVersion: string;
+  }): Promise<IngestionRun> {
+    const rows = await this.sql.unsafe<IngestionRun[]>(
+      `insert into ingest.ingestion_runs (trigger, adapter_version, rules_version)
+       values ($1, $2, $3)
+       returning id as "runId", run_public_id::text as "runPublicId"`,
+      [input.trigger, input.adapterVersion, input.rulesVersion],
+    );
+    const run = rows[0];
+    if (!run) throw new Error("Ingestion run could not be created");
+    return run;
+  }
+
+  async recordPageCheck(check: PageCheckRecord): Promise<string> {
+    return this.sql.begin(async (transaction) => {
+      const rows = await transaction.unsafe<Array<{ observationId: string }>>(
+        `insert into ingest.fetch_observations (
+          run_id, source_page_id, requested_url, final_url, http_status,
+          response_content_type, response_bytes, duration_ms, retrieved_at,
+          raw_response_sha256, transport_outcome, error_code,
+          is_contract_valid, retry_count
+        ) values (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+        ) returning id as "observationId"`,
+        [
+          check.runId,
+          check.sourcePageId,
+          check.requestedUrl,
+          check.finalUrl ?? null,
+          check.httpStatus ?? null,
+          check.responseContentType ?? null,
+          check.responseBytes ?? null,
+          check.durationMs,
+          check.retrievedAt,
+          check.rawResponseSha256 ?? null,
+          check.transportOutcome,
+          check.errorCode ?? null,
+          check.isContractValid,
+          check.retryCount,
+        ],
+      );
+      const observation = rows[0];
+      if (!observation) throw new Error("Fetch observation could not be created");
+
+      await transaction.unsafe(
+        `update ingest.source_pages
+         set
+           health = $1,
+           last_successful_fetch_at = case when $2 then $3 else last_successful_fetch_at end,
+           updated_at = now()
+         where id = $4`,
+        [check.health, check.isContractValid, check.retrievedAt, check.sourcePageId],
+      );
+      return observation.observationId;
+    });
+  }
+
+  async finishRun(completion: RunCompletion): Promise<void> {
+    const rows = await this.sql.unsafe<Array<{ id: string }>>(
+      `update ingest.ingestion_runs
+       set
+         finished_at = now(),
+         status = $1,
+         considered_count = $2,
+         skipped_count = $3,
+         unchanged_count = $4,
+         changed_count = $5,
+         rejected_count = $6,
+         failed_count = $7,
+         summary = $8::jsonb
+       where id = $9 and status = 'running'
+       returning id`,
+      [
+        completion.status,
+        completion.consideredCount,
+        completion.skippedCount,
+        completion.unchangedCount,
+        completion.changedCount,
+        completion.rejectedCount,
+        completion.failedCount,
+        JSON.stringify(completion.summary),
+        completion.runId,
+      ],
+    );
+    if (!rows[0]) throw new Error(`Running ingestion run ${completion.runId} was not found`);
+  }
+
+  async projectPublication(publicationId: string): Promise<void> {
+    try {
+      await this.sql.begin(async (transaction) => {
+        const rows = await transaction.unsafe<Array<{ publicationId: string }>>(
+          `select publication_id as "publicationId"
+           from catalogue.search_projection_jobs
+           where publication_id = $1
+           for update`,
+          [publicationId],
+        );
+        if (!rows[0]) throw new Error(`Projection job for publication ${publicationId} was not found`);
+
+        await transaction.unsafe(
+          `insert into catalogue.search_documents (
+             publication_id, entry_id, name, provider_name, description, classification_text
+           )
+           select
+             publication.id,
+             publication.entry_id,
+             publication.name,
+             publication.provider_name,
+             publication.description,
+             coalesce(publication.document ->> 'area', '')
+           from catalogue.publications publication
+           where publication.id = $1
+           on conflict (publication_id) do update set
+             entry_id = excluded.entry_id,
+             name = excluded.name,
+             provider_name = excluded.provider_name,
+             description = excluded.description,
+             classification_text = excluded.classification_text,
+             projected_at = now()`,
+          [publicationId],
+        );
+        await transaction.unsafe(
+          `update catalogue.search_projection_jobs
+           set status = 'succeeded',
+               attempt_count = attempt_count + 1,
+               last_error_code = null,
+               last_attempted_at = now(),
+               projected_at = now()
+           where publication_id = $1`,
+          [publicationId],
+        );
+      });
+    } catch (error) {
+      await this.sql.unsafe(
+        `update catalogue.search_projection_jobs
+         set status = 'failed',
+             attempt_count = attempt_count + 1,
+             last_error_code = 'projection_failed',
+             last_attempted_at = now()
+         where publication_id = $1`,
+        [publicationId],
+      );
+      throw error;
+    }
   }
 }
