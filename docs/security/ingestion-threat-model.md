@@ -34,4 +34,3 @@ The browser cannot choose a fetch URL. Scheduled and manual checks receive one o
 DNS validation followed by the platform fetch has a time-of-check/time-of-use gap. The risk is constrained because URLs and hosts are repository-controlled council infrastructure rather than caller-supplied domains. Before broadening source admission to public/user-controlled hosts, use a connection agent that resolves once and pins the validated address or an outbound filtering proxy.
 
 The fixtures are independently authored contract fixtures, not archived council HTML. A maintainer must compare each selector and extracted field with the live reviewed page immediately before first production ingestion. Licence evidence must be re-reviewed by its configured date, and the documented commercial-reuse clarification remains unresolved.
-
