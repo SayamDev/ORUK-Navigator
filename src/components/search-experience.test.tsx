@@ -1,6 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SearchExperience } from "./search-experience";
 import type { CatalogueService } from "@/domain/catalogue";
@@ -29,27 +29,19 @@ describe("SearchExperience", () => {
 
     expect(screen.getByRole("heading", { name: "Find support in Tameside" })).toBeInTheDocument();
     expect(screen.getByLabelText("What support are you looking for?")).toBeInTheDocument();
-    expect(screen.getByLabelText("Town or postcode (optional)")).toBeInTheDocument();
-    expect(screen.getByText(/small, reviewed selection of Tameside Council information/i)).toBeInTheDocument();
-    expect(screen.getByText(/does not include every Tameside service/i)).toBeInTheDocument();
-    expect(container.querySelector(".coverage-panel")).not.toBeInTheDocument();
-    expect(container.querySelector(".route-signature")).toBeInTheDocument();
+    expect(screen.getByLabelText("Where do you need support?")).toBeInTheDocument();
+    expect(screen.getByText(/five reviewed Tameside services/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What this pilot can help with" })).toBeInTheDocument();
+    expect(container.querySelector(".route-motif")).not.toBeInTheDocument();
   });
 
-  it("keeps support types out of the default layout and reveals them on request", async () => {
-    const user = userEvent.setup();
+  it("shows common searches before the user knows what to type", () => {
     render(<SearchExperience services={[service]} />);
 
-    expect(screen.queryByText("Common searches")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Benefits and money advice" })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Browse support types" }));
-
-    expect(screen.getByText("Support types in this pilot")).toBeInTheDocument();
+    expect(screen.getByText("Common searches")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Benefits and money advice" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Housing and homelessness" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Adult mental health" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Benefits and money advice" })).toHaveFocus();
   });
 
   it("suggests relevant searches while the user types and lets them choose one", async () => {
@@ -75,6 +67,11 @@ describe("SearchExperience", () => {
   it("searches repository records without placing the need or place in the address", async () => {
     const user = userEvent.setup();
     const originalUrl = window.location.href;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
     render(<SearchExperience services={[service]} />);
 
     await user.type(screen.getByLabelText("What support are you looking for?"), "debt advice");
@@ -85,6 +82,9 @@ describe("SearchExperience", () => {
     expect(window.location.href).toBe(originalUrl);
     expect(window.location.href).not.toContain("debt");
     expect(window.location.href).not.toContain("Ashton");
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    });
   });
 
   it("rejects a place outside the pilot and links the error to the place field", async () => {
@@ -92,7 +92,8 @@ describe("SearchExperience", () => {
     render(<SearchExperience services={[service]} />);
 
     await user.type(screen.getByLabelText("What support are you looking for?"), "debt advice");
-    const place = screen.getByLabelText("Town or postcode (optional)");
+    const place = screen.getByLabelText("Where do you need support?");
+    await user.clear(place);
     await user.type(place, "Lancaster");
     await user.click(screen.getByRole("button", { name: /find support/i }));
 
