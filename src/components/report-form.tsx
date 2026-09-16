@@ -12,20 +12,35 @@ const choices = [
   ["other", "Something else"],
 ] as const;
 
-export function ReportForm({ serviceName }: { serviceName: string }) {
+export function ReportForm({ serviceName, entryPublicId }: { serviceName: string; entryPublicId: string }) {
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
+  const [reference, setReference] = useState("");
+  const [sending, setSending] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const result = validateReport({ problem: String(data.get("problem") ?? ""), details: String(data.get("detail") ?? "") });
     const firstError = result.problem ?? result.details;
     if (firstError) { setError(firstError); return; }
-    setError(""); setSent(true);
+    setError(""); setSending(true);
+    try {
+      const response = await fetch("/api/corrections", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ entryPublicId, category: data.get("problem"), detail: data.get("detail"), website: data.get("website") }),
+      });
+      const payload = await response.json() as { reference?: string; error?: string };
+      if (!response.ok || !payload.reference) throw new Error(payload.error ?? "The report could not be saved.");
+      setReference(payload.reference);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The report could not be saved. Try again later.");
+    } finally {
+      setSending(false);
+    }
   }
 
-  if (sent) return <div className="confirmation" role="status"><p className="eyebrow">Prototype confirmation</p><h2>Thank you for flagging this</h2><p>This prototype does not send or store reports yet. Your feedback has not left this browser.</p></div>;
+  if (reference) return <div className="confirmation" role="status"><p className="eyebrow">Report received</p><h2>Thank you for flagging this</h2><p>A maintainer will review the catalogue information. Your reference is <strong>{reference}</strong>.</p><p>We cannot provide an outcome because this form does not collect contact details.</p></div>;
 
   return <form className="report-form" onSubmit={submit} noValidate>
     {error && <div className="error-summary" role="alert"><strong>There is a problem</strong><a href="#problem-incorrect">{error}</a></div>}
@@ -33,6 +48,7 @@ export function ReportForm({ serviceName }: { serviceName: string }) {
       {choices.map(([value, label]) => <div className="radio" key={value}><input id={`problem-${value}`} name="problem" value={value} type="radio" /><label htmlFor={`problem-${value}`}>{label}</label></div>)}
     </fieldset>
     <div className="field"><label htmlFor="detail">Tell us more <span>(optional)</span></label><p id="detail-hint">Do not include personal or sensitive information. Maximum 1,000 characters.</p><textarea id="detail" name="detail" rows={6} maxLength={1000} aria-describedby="detail-hint" /></div>
-    <button className="button button-primary" type="submit">Send report</button>
+    <div className="honeypot" aria-hidden="true"><label htmlFor="website">Leave this blank</label><input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" /></div>
+    <button className="button button-primary" type="submit" disabled={sending}>{sending ? "Sending…" : "Send report"}</button>
   </form>;
 }

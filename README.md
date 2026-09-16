@@ -30,7 +30,7 @@ The working prototype includes:
 - field-backed “Why this matched” reasons;
 - service details with authoritative source links and provenance;
 - honest missing-information and limited-coverage language; and
-- a validated correction-report journey that explicitly does not send or store reports yet.
+- a server-validated correction-report journey with random references and privacy-bounded storage.
 
 ### Architecture
 
@@ -66,8 +66,9 @@ The working prototype includes:
 ### Automation
 
 - Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
-- Scheduled-source health, correction retention, alerting, and recovery boundaries are defined in [operations](docs/operations.md)
-- CI/CD and deploy automation are upcoming implementation milestones
+- Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
+- [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
+- Deployment and its production ingestion schedule remain upcoming implementation milestones
 
 ### Accessibility
 
@@ -81,6 +82,7 @@ The working prototype includes:
 - User search narratives and submitted postcodes are not placed in URLs, persisted, or intentionally logged
 - External sources are untrusted and constrained by manifest, origin, content-type, size, timeout, and review boundaries
 - Corrections cannot mutate catalogue data automatically
+- Correction text, short-lived keyed abuse controls, append-only review history, and allowlisted events live in a private operations schema
 - [Privacy-first operating and retention model](docs/operations.md)
 
 ### Testing
@@ -95,7 +97,7 @@ pnpm test:repositories
 pnpm test:e2e
 ```
 
-The current checkpoint passes 52 unit/component/evaluation/ingestion tests, 48 pgTAP database checks, nine real-PostgreSQL repository integration scenarios, two isolated Chromium journeys, strict TypeScript checking, ESLint, and an optimized Next.js production build.
+The current checkpoint passes 56 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, two isolated Chromium journeys, strict TypeScript checking, ESLint, and an optimized Next.js production build.
 
 ### ADRs
 
@@ -107,7 +109,7 @@ The current checkpoint passes 52 unit/component/evaluation/ingestion tests, 48 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, and repository-backed public journey are complete, but the full production product is not finished. Key remaining work includes production correction persistence, scheduled ingestion/health monitoring, CI/CD, security/accessibility audits, deployment, and runbook rehearsal.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, and retention automation are complete. The full production product is not finished: production ingestion scheduling, hosting, named operator staffing, secret configuration, backup/restore rehearsal, and security/accessibility launch audits remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

@@ -1,0 +1,49 @@
+name: Operations maintenance
+
+on:
+  schedule:
+    - cron: "17 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: operations-maintenance-production
+  cancel-in-progress: false
+
+jobs:
+  reconcile-and-retain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAINTENANCE_URL: ${{ secrets.OPERATIONS_MAINTENANCE_URL }}
+      MAINTENANCE_SECRET: ${{ secrets.OPERATIONS_MAINTENANCE_SECRET }}
+    steps:
+      - name: Reconcile source alerts and apply retention
+        id: maintenance
+        shell: bash
+        run: |
+          test -n "$MAINTENANCE_URL"
+          test -n "$MAINTENANCE_SECRET"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "authorization: Bearer $MAINTENANCE_SECRET" \
+            --header "content-type: application/json" \
+            --max-time 60 \
+            "$MAINTENANCE_URL/api/operations/maintenance"
+
+      - name: Open or update deduplicated failure issue
+        if: ${{ failure() && steps.maintenance.outcome == 'failure' }}
+        shell: bash
+        run: |
+          title="[operations] Scheduled maintenance failed"
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          body="The scheduled operations-maintenance request failed. Inspect this workflow run and follow docs/runbooks/ingestion-health.md. Do not copy user input or secret values into this issue."
+          if test -n "$number"; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --label "needs-triage"
+          fi

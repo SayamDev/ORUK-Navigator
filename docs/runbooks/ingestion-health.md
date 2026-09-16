@@ -30,3 +30,9 @@ Close or downgrade the alert only after recording:
 - follow-up work with an owner and due date.
 
 Never mark a service closed, unavailable, eligible, or safe based solely on technical source health.
+
+## Alert exercise
+
+`pnpm test:repositories` induces a stale source, runs reconciliation twice to prove one open alert is reused, then records a healthy check and proves that same alert resolves. Two consecutive failed observations, stale freshness, pending material candidates, and an all-source failed run are the only v1 source conditions projected into actionable alerts.
+
+The scheduled maintenance route is authenticated and returns counts only. A workflow failure opens or updates one GitHub issue titled `[operations] Scheduled maintenance failed`; it must not include source bodies or user input. See [corrections, alerts, and retention](corrections-and-retention.md) for setup and test-fire steps.

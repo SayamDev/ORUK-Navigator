@@ -30,6 +30,14 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
   await expect(page.getByRole("heading", { name: "Welfare Rights" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Source and provenance" })).toBeVisible();
 
+  await page.getByRole("link", { name: /Report a problem/ }).click();
+  await expect(page.getByRole("heading", { name: "Report a problem" })).toBeVisible();
+  await page.getByLabel("Service information is out of date").check();
+  await page.getByLabel(/Tell us more/).fill("The publisher page appears to have changed.");
+  await page.getByRole("button", { name: "Send report" }).click();
+  await expect(page.getByRole("heading", { name: "Thank you for flagging this" })).toBeVisible();
+  await expect(page.getByText(/Your reference is/)).toContainText(/[0-9a-f-]{36}/);
+
   const hasHorizontalOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   );
