@@ -50,6 +50,15 @@ test("health check exposes only bounded availability state", async ({ request })
 });
 
 async function expectNoAccessibilityViolations(page: Page) {
+  // Entrance animations fade text in. Axe measures the colour on screen, so a check that
+  // starts mid-animation reports contrast against a half-faded element rather than the
+  // colour a reader ends up with. Wait for motion to settle first.
+  await page.waitForFunction(
+    () => document.getAnimations().every((animation) => animation.playState !== "running"),
+    undefined,
+    { timeout: 5_000 },
+  );
+
   const result = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
