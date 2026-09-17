@@ -6,7 +6,9 @@ ORUK Navigator is an independent, open-source service-discovery project built ar
 
 It is not produced, endorsed, or maintained by iStandUK, iNetwork, Tameside Council, or Open Referral UK.
 
-![ORUK Navigator public search concept](docs/design/concepts/home-search.png)
+![The ORUK Navigator home page: "Find support in Tameside", the reviewed topics the pilot covers, and the search that starts the journey](docs/design/screenshots/home-live.png)
+
+<sub>The live service on 17 September 2026. The original design concept is kept at [docs/design/concepts/home-search.png](docs/design/concepts/home-search.png) and the fidelity comparison in [docs/design/prototype-fidelity.md](docs/design/prototype-fidelity.md).</sub>
 
 ## Project map
 
