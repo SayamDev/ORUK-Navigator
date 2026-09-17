@@ -38,6 +38,39 @@ describe("searchCatalogueServices", () => {
     );
   });
 
+  it("matches words at word starts only", () => {
+    const current = [service("current-only", "Current Service", "Check current details with the council.")];
+
+    expect(searchCatalogueServices("rent", current)).toEqual([]);
+    expect(searchCatalogueServices("mortgage", services).map((result) => result.slug)).toEqual(["debt-advice"]);
+  });
+
+  it("ranks a service named for the need above equally relevant services", () => {
+    const carers = [
+      service("advice-hub", "Advice Hub", "Advice for carers and people who look after someone."),
+      service("carers-centre", "Carers Centre", "Support for people who look after someone."),
+    ];
+
+    expect(searchCatalogueServices("carer", carers).map((result) => result.slug)).toEqual([
+      "carers-centre",
+      "advice-hub",
+    ]);
+  });
+
+  it("does not treat a financial assessment as financial support", () => {
+    const equipment = [service("equipment", "Equipment", "Major adaptations may involve a financial assessment.")];
+
+    expect(searchCatalogueServices("money", equipment)).toEqual([]);
+  });
+
+  it("explains every reviewed concept in plain language", () => {
+    const carers = [service("carers", "Carers Centre", "Support for people who look after someone.")];
+
+    expect(searchCatalogueServices("I look after someone", carers)[0]?.matchReasons).toEqual([
+      "The reviewed service information mentions support for carers.",
+    ]);
+  });
+
   it("does not invent a match when the limited catalogue has none", () => {
     expect(searchCatalogueServices("pet grooming", services)).toEqual([]);
   });

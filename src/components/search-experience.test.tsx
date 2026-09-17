@@ -30,7 +30,7 @@ describe("SearchExperience", () => {
     expect(screen.getByRole("heading", { name: "Find support in Tameside" })).toBeInTheDocument();
     expect(screen.getByLabelText("What support are you looking for?")).toBeInTheDocument();
     expect(screen.getByLabelText("Where do you need support?")).toBeInTheDocument();
-    expect(screen.getByText(/five reviewed Tameside services/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 reviewed Tameside service is included/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What this pilot can help with" })).toBeInTheDocument();
     expect(container.querySelector(".route-motif")).not.toBeInTheDocument();
   });

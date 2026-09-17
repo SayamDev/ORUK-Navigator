@@ -4,7 +4,7 @@
 
 ## Implementation checkpoint
 
-The five-page Tameside pilot contract is implemented in `src/ingestion` and the private Postgres repositories:
+The ten-page Tameside pilot contract (five pages admitted on 15 September 2026, five more on 17 September 2026; see `docs/research/source-manifest-expansion-2026-09.md`) is implemented in `src/ingestion` and the private Postgres repositories:
 
 - repository-controlled, fail-closed source manifests;
 - bounded SSRF-aware transport with manual redirect validation, size/type/timeout/retry limits, and redacted failures;

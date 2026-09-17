@@ -19,5 +19,12 @@ export const searchEvaluationCases: SearchEvaluationCase[] = [
   { id: "losing-home", query: "I am at risk of losing my home", expectedSlugs: ["tameside-homelessness-service"], note: "The reviewed source covers people at risk of losing their home." },
   { id: "adult-mental-health", query: "Adult mental health support", expectedSlugs: ["adult-mental-health-services"], note: "The source explicitly covers adult mental-health support." },
   { id: "social-care-mental-health", query: "Mental health social care", expectedSlugs: ["adult-mental-health-services"], note: "The source is council adult social-care information." },
+  { id: "rent-shortfall", query: "I need help paying a rent shortfall", expectedSlugs: ["housing-payments"], note: "The reviewed Housing Payments source covers rent shortfalls." },
+  { id: "rent-deposit", query: "Help with a rent deposit", expectedSlugs: ["housing-payments"], note: "The reviewed Housing Payments source covers rent deposits." },
+  { id: "carer", query: "I am a carer looking after my mum", expectedSlugs: ["tameside-carers-centre"], note: "The reviewed Carers Centre source supports people who look after someone." },
+  { id: "family-hub", query: "Support for my family and baby", expectedSlugs: ["family-hubs"], note: "The reviewed Family Hubs source covers early help for families and infants." },
+  { id: "grab-rails", query: "I need grab rails fitted at home", expectedSlugs: ["equipment-and-adaptations"], note: "The reviewed source lists grab rails as equipment." },
+  { id: "stairs", query: "I am struggling with the stairs because of my disability", expectedSlugs: ["equipment-and-adaptations"], note: "The reviewed source covers stair rails and adaptations after assessment." },
+  { id: "social-care-advice", query: "Adult social care advice after a hospital stay", expectedSlugs: ["adult-social-care-early-support"], note: "The reviewed hub is the first contact for adult social care, including after a hospital stay." },
   { id: "irrelevant", query: "Pet grooming", expectedSlugs: [], note: "An unrelated request must not produce a plausible-looking result." },
 ];

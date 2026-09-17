@@ -13,8 +13,8 @@ const source = tamesideSourceManifest["welfare-rights"];
 const publicDns = async () => [{ address: "8.8.8.8", family: 4 }];
 
 describe("source admission", () => {
-  it("admits the five complete reviewed Tameside pages", () => {
-    expect(Object.values(tamesideSourceManifest).map((entry) => assertAdmittedSource(entry))).toHaveLength(5);
+  it("admits the ten complete reviewed Tameside pages", () => {
+    expect(Object.values(tamesideSourceManifest).map((entry) => assertAdmittedSource(entry))).toHaveLength(10);
   });
 
   it("fails closed when required licence permission is absent", () => {

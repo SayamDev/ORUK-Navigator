@@ -13,12 +13,16 @@ All notable public-facing changes are recorded here. The project follows semanti
 - CI release gates for code quality, database contracts, responsive browser journeys, accessibility, dependencies, and security headers.
 - Reproducible search-projection rebuild and backup/restore rehearsal commands.
 - Public Vercel pilot backed by a dedicated UK-region Free Plan Supabase project.
+- Five more reviewed Tameside Council services: Housing Payments, Tameside Carers Centre, Family Hubs, Equipment and Adaptations, and the adult social care Early Support and Advice Hub, with an idempotent data script for existing databases.
+- Common-search choices for caring for someone, families and children, and equipment and adaptations.
 
 ### Changed
 
 - Restored the approved information-rich ORUK Navigator homepage with its branded wordmark, coverage panel, prominent search card, and prefilled Ashton-under-Lyne pilot location.
 - Kept common support types visible and narrowed them to relevant suggestions as people type.
 - Directed the viewport and keyboard focus to **Support that may help** after a successful search, while respecting reduced-motion preferences.
+- Search words now match only at the start of source words, so short words such as "rent" no longer match inside "current"; matches in a service name rank slightly higher; "financial assessment" no longer counts as financial support.
+- The homepage coverage count and wording now follow the number of reviewed services.
 
 ### Security
 
