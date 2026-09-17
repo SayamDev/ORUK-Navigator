@@ -26,5 +26,6 @@ export const searchEvaluationCases: SearchEvaluationCase[] = [
   { id: "grab-rails", query: "I need grab rails fitted at home", expectedSlugs: ["equipment-and-adaptations"], note: "The reviewed source lists grab rails as equipment." },
   { id: "stairs", query: "I am struggling with the stairs because of my disability", expectedSlugs: ["equipment-and-adaptations"], note: "The reviewed source covers stair rails and adaptations after assessment." },
   { id: "social-care-advice", query: "Adult social care advice after a hospital stay", expectedSlugs: ["adult-social-care-early-support"], note: "The reviewed hub is the first contact for adult social care, including after a hospital stay." },
+  { id: "carer-suggestion", query: "I need support as a carer looking after someone", expectedSlugs: ["tameside-carers-centre"], note: "The common-search choice for carers must lead with the reviewed Carers Centre." },
   { id: "irrelevant", query: "Pet grooming", expectedSlugs: [], note: "An unrelated request must not produce a plausible-looking result." },
 ];
