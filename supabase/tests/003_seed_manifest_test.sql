@@ -18,14 +18,14 @@ select results_eq(
 
 select results_eq(
   $$select count(*)::bigint from ingest.source_pages where admission_status = 'approved'$$,
-  array[5::bigint],
-  'five approved source pages are seeded'
+  array[10::bigint],
+  'ten approved source pages are seeded'
 );
 
 select results_eq(
   $$select count(*)::bigint from ingest.extraction_candidates where review_status = 'approved' and adapter_version = 'fixture-v1'$$,
-  array[5::bigint],
-  'five reviewed extraction candidates are seeded'
+  array[10::bigint],
+  'ten reviewed extraction candidates are seeded'
 );
 
 select results_eq(
@@ -36,8 +36,8 @@ select results_eq(
     join ingest.extraction_candidates c on c.id = p.approved_candidate_id
     where e.lifecycle = 'active' and c.adapter_version = 'fixture-v1'
   $$,
-  array[5::bigint],
-  'five active catalogue entries are seeded'
+  array[10::bigint],
+  'ten active catalogue entries are seeded'
 );
 
 select results_eq(
@@ -49,13 +49,13 @@ select results_eq(
     join ingest.extraction_candidates c on c.id = p.approved_candidate_id
     where c.adapter_version = 'fixture-v1'
   $$,
-  array[5::bigint],
+  array[10::bigint],
   'every seed entry activates its own publication'
 );
 
 select results_eq(
   $$select count(*)::bigint from catalogue.source_actions where kind = 'authoritative_details'$$,
-  array[5::bigint],
+  array[10::bigint],
   'every seed publication has an authoritative source action'
 );
 
@@ -67,7 +67,7 @@ select results_eq(
     join ingest.extraction_candidates c on c.id = p.approved_candidate_id
     where c.adapter_version = 'fixture-v1'
   $$,
-  array[5::bigint],
+  array[10::bigint],
   'every seed publication has a search document'
 );
 
@@ -77,7 +77,7 @@ select results_eq(
     from catalogue.publications
     where provider_name = 'Tameside Metropolitan Borough Council'
   $$,
-  array[5::bigint],
+  array[10::bigint],
   'all seed publications retain the reviewed publisher'
 );
 

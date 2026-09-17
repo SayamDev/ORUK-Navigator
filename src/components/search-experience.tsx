@@ -34,6 +34,21 @@ const searchSuggestions = [
     query: "I need help with my mental health",
     keywords: ["mental", "health", "anxiety", "depression", "wellbeing"],
   },
+  {
+    label: "Caring for someone",
+    query: "I need support as a carer looking after someone",
+    keywords: ["carer", "caring", "unpaid", "relative", "parent", "partner"],
+  },
+  {
+    label: "Families and children",
+    query: "I need family support for my child",
+    keywords: ["family", "child", "children", "baby", "parent", "send"],
+  },
+  {
+    label: "Equipment and adaptations",
+    query: "I need equipment or adaptations to live independently at home",
+    keywords: ["equipment", "adaptation", "disability", "stairs", "rails", "social care"],
+  },
 ] as const;
 
 export function SearchExperience({ services }: { services: CatalogueService[] }) {
@@ -99,14 +114,16 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
             <p className="lede">Describe what is happening in your own words. We will look across a small set of reviewed council sources.</p>
           </div>
           <aside className="coverage-panel" aria-labelledby="coverage-heading">
-            <p className="coverage-count"><strong>5</strong><span>reviewed services</span></p>
+            <p className="coverage-count"><strong>{services.length}</strong><span>reviewed services</span></p>
             <h2 id="coverage-heading">What this pilot can help with</h2>
             <ul>
               <li>Money, benefits and debt</li>
               <li>Housing and homelessness</li>
               <li>Adult mental health</li>
+              <li>Carers, families and children</li>
+              <li>Adult social care and home adaptations</li>
             </ul>
-            <p>Five reviewed Tameside services are included. This is not an emergency service.</p>
+            <p>{services.length} reviewed Tameside {services.length === 1 ? "service is" : "services are"} included. This is not an emergency service.</p>
           </aside>
         </div>
       </section>
@@ -172,7 +189,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
                 <details><summary>Why this matched</summary><p>{service.matchReasons[0]}</p></details>
                 <div className="card-actions"><Link className="text-link" href={`/services/${service.slug}`}>View service details <span aria-hidden="true">→</span></Link><span>Source checked {formatCheckedDate(service.sourceCheckedAt)}</span></div>
               </article>
-            ))}</div> : <div className="empty-state"><h3>No reviewed matches found</h3><p>Try a more general description such as debt, housing or mental health. The pilot only contains five services.</p></div>}
+            ))}</div> : <div className="empty-state"><h3>No reviewed matches found</h3><p>Try a more general description such as debt, housing or mental health. The pilot only contains {services.length} {services.length === 1 ? "service" : "services"}.</p></div>}
           </section>
         ) : (
           <section className="how-it-works" aria-labelledby="how-heading"><p className="eyebrow">A transparent route</p><h2 id="how-heading">How it works</h2><div className="steps"><article><span>1</span><h3>Describe your need</h3><p>Use everyday language. No account is required.</p></article><article><span>2</span><h3>Review the reasons</h3><p>See which source fields contributed to a match.</p></article><article><span>3</span><h3>Check the source</h3><p>Confirm current details with the publisher.</p></article></div></section>
