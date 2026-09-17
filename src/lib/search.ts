@@ -12,8 +12,9 @@ const conceptPhrases: Record<string, string[]> = {
 };
 
 const ignoredWords = new Set([
-  "a", "about", "advice", "after", "am", "an", "and", "at", "be", "for", "help", "i", "im", "in", "is", "it",
-  "me", "my", "need", "of", "on", "or", "support", "the", "to", "with",
+  "a", "about", "advice", "after", "am", "an", "and", "as", "at", "be", "by", "can", "do", "for", "from",
+  "get", "help", "i", "if", "im", "in", "is", "it", "me", "my", "need", "of", "on", "or", "so", "support",
+  "the", "to", "we", "with", "you", "your",
 ]);
 
 // Words match at the start of a source word, so "carer" finds "carers" but "rent" never finds "current".

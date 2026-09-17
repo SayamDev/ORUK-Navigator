@@ -63,6 +63,12 @@ describe("searchCatalogueServices", () => {
     expect(searchCatalogueServices("money", equipment)).toEqual([]);
   });
 
+  it("ignores filler words such as 'as' that appear in unrelated services", () => {
+    const unrelated = [service("equipment", "Equipment", "Adaptations such as grab rails.")];
+
+    expect(searchCatalogueServices("support as a carer", unrelated)).toEqual([]);
+  });
+
   it("explains every reviewed concept in plain language", () => {
     const carers = [service("carers", "Carers Centre", "Support for people who look after someone.")];
 
