@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="OrukFeedCheck.Cli/OrukFeedCheck.Cli.csproj" />
+  <Project Path="OrukFeedCheck.Core/OrukFeedCheck.Core.csproj" />
+  <Project Path="OrukFeedCheck.Tests/OrukFeedCheck.Tests.csproj" />
+</Solution>
