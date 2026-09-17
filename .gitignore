@@ -23,6 +23,10 @@ test-results/
 .vercel/
 .turbo/
 
+# .NET build output
+[Bb]in/
+[Oo]bj/
+
 # Editor-specific state
 .idea/
 .vscode/
