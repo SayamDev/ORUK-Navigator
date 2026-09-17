@@ -26,7 +26,7 @@ Then open `http://localhost:3000`.
 The working prototype includes:
 
 - a privacy-conscious natural-language search task;
-- deterministic matching over five reviewed Tameside service fixtures;
+- deterministic matching over ten reviewed Tameside service fixtures;
 - field-backed “Why this matched” reasons;
 - service details with authoritative source links and provenance;
 - honest missing-information and limited-coverage language;

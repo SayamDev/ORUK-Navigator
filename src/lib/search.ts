@@ -2,12 +2,24 @@ import type { CatalogueService } from "@/domain/catalogue";
 
 const conceptPhrases: Record<string, string[]> = {
   "debt-support": ["debt", "debt advice", "money advice", "arrears"],
-  "financial-support": ["money", "financial", "financial crisis", "benefits"],
-  "housing-support": ["housing", "homeless", "homelessness", "losing my home"],
-  "mental-health-support": ["mental health", "wellbeing", "social care"],
+  "financial-support": ["money", "financial help", "financial support", "financial crisis", "financial shock", "benefits"],
+  "housing-support": ["housing", "homeless", "homelessness", "losing my home", "rent shortfall", "deposit"],
+  "mental-health-support": ["mental health", "wellbeing"],
+  "carer-support": ["carer", "caring for", "look after someone", "looking after someone"],
+  "family-support": ["family", "families", "parent", "child", "baby", "pregnan"],
+  "independent-living-support": ["equipment", "adaptation", "grab rail", "stair", "disability", "disabled", "live independently"],
+  "adult-social-care": ["social care", "social-care", "everyday tasks", "hospital stay", "care and support"],
 };
 
-const ignoredWords = new Set(["a", "about", "advice", "and", "for", "help", "i", "need", "support", "the", "with"]);
+const ignoredWords = new Set([
+  "a", "about", "advice", "after", "am", "an", "and", "at", "be", "for", "help", "i", "im", "in", "is", "it",
+  "me", "my", "need", "of", "on", "or", "support", "the", "to", "with",
+]);
+
+// Words match at the start of a source word, so "carer" finds "carers" but "rent" never finds "current".
+function containsWordPrefix(text: string, word: string): boolean {
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${word}`, "u").test(text);
+}
 
 export type CatalogueSearchResult = CatalogueService & {
   matchReasons: string[];
@@ -59,14 +71,15 @@ export function searchCatalogueServices(
       const haystack = Object.values(fields).join(" ");
       const serviceConcepts = matchingConcepts(haystack);
       const conceptMatches = [...concepts].filter((concept) => serviceConcepts.has(concept));
-      const lexicalMatches = words.filter((word) => haystack.includes(word));
+      const lexicalMatches = words.filter((word) => containsWordPrefix(haystack, word));
+      const nameMatches = words.filter((word) => containsWordPrefix(fields.name, word));
       const matchedField = Object.entries(fields).find(([, text]) =>
-        words.some((word) => text.includes(word)),
+        words.some((word) => containsWordPrefix(text, word)),
       )?.[0];
 
       return {
         service,
-        score: conceptMatches.length * 10 + lexicalMatches.length,
+        score: conceptMatches.length * 10 + lexicalMatches.length + nameMatches.length * 2,
         matchReason: explainMatch(conceptMatches, matchedField),
       };
     })
@@ -84,6 +97,10 @@ function explainMatch(concepts: string[], matchedField?: string): string {
     "financial-support": "financial support",
     "housing-support": "housing support",
     "mental-health-support": "mental-health support",
+    "carer-support": "support for carers",
+    "family-support": "family support",
+    "independent-living-support": "equipment and adaptations for independent living",
+    "adult-social-care": "adult social care",
   };
   if (concepts[0]) {
     return `The reviewed service information mentions ${conceptLabels[concepts[0]]}.`;

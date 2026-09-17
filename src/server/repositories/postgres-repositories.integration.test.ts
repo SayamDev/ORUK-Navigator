@@ -35,7 +35,7 @@ describe("Postgres repository boundary", () => {
     const services = await catalogue.listActive();
     const service = await catalogue.findActiveBySlug("welfare-rights");
 
-    expect(services).toHaveLength(5);
+    expect(services).toHaveLength(10);
     expect(service).toMatchObject({
       slug: "welfare-rights",
       providerName: "Tameside Metropolitan Borough Council",

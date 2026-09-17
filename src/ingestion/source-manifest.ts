@@ -3,7 +3,12 @@ export type SourcePageKey =
   | "welfare-rights"
   | "debt-advice"
   | "tameside-homelessness-service"
-  | "adult-mental-health-services";
+  | "adult-mental-health-services"
+  | "housing-payments"
+  | "tameside-carers-centre"
+  | "family-hubs"
+  | "equipment-and-adaptations"
+  | "adult-social-care-early-support";
 
 export type SourceManifestEntry = {
   key: SourcePageKey;
@@ -96,6 +101,37 @@ export const tamesideSourceManifest = {
     canonicalUrl:
       "https://www.tameside.gov.uk/adults/care-and-support/types-of-support/adult-mental-health-services",
     geographicScope: "Adult social-care mental-health support in Tameside",
+  },
+  "housing-payments": {
+    ...shared,
+    key: "housing-payments",
+    canonicalUrl: "https://www.tameside.gov.uk/council-tax-and-benefits/benefits/housing-payments",
+    geographicScope:
+      "Tameside council applicants entitled to Housing Benefit or Universal Credit housing costs",
+  },
+  "tameside-carers-centre": {
+    ...shared,
+    key: "tameside-carers-centre",
+    canonicalUrl: "https://www.tameside.gov.uk/adults/what-support-is-available/carers",
+    geographicScope: "People in Tameside who look after someone",
+  },
+  "family-hubs": {
+    ...shared,
+    key: "family-hubs",
+    canonicalUrl: "https://www.tameside.gov.uk/children-and-families/family-hubs",
+    geographicScope: "Families in Tameside's four neighbourhood areas",
+  },
+  "equipment-and-adaptations": {
+    ...shared,
+    key: "equipment-and-adaptations",
+    canonicalUrl: "https://www.tameside.gov.uk/adults/equipment-and-adaptations",
+    geographicScope: "Adult social-care support in Tameside, subject to assessment",
+  },
+  "adult-social-care-early-support": {
+    ...shared,
+    key: "adult-social-care-early-support",
+    canonicalUrl: "https://www.tameside.gov.uk/adultservices/contact-us",
+    geographicScope: "Adult social-care information and advice in Tameside",
   },
 } satisfies Record<SourcePageKey, SourceManifestEntry>;
 

@@ -87,6 +87,22 @@ const pageRules: Record<SourcePageKey, PageRule> = {
     warning: "Crisis and referral wording requires heightened editorial review.",
     safetyFlags: ["urgent-guidance", "health-content"],
   },
+  "housing-payments": {
+    warning: "Awards are discretionary and funding is limited; eligibility is not inferred.",
+  },
+  "tameside-carers-centre": {
+    warning: "Third-party carer resources and newsletter content are excluded from the council service record.",
+  },
+  "family-hubs": {
+    warning: "Partner organisations and external Best Start for Life content are excluded from the council service record.",
+  },
+  "equipment-and-adaptations": {
+    warning: "Grant values and eligibility are assessment-dependent and require heightened editorial review.",
+  },
+  "adult-social-care-early-support": {
+    warning: "Safeguarding and out-of-hours wording requires heightened editorial review.",
+    safetyFlags: ["urgent-guidance"],
+  },
 };
 
 export function extractTamesidePage(

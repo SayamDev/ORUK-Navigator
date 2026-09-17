@@ -33,7 +33,15 @@ References: [Vercel Git deployments](https://vercel.com/docs/deployments/git) an
    pnpm exec supabase db push --linked --include-seed
    ```
 
-   Inspect the migration plan before confirming. The deterministic seed is the reviewed five-entry pilot baseline; never use `db reset` against a shared or production project.
+   Inspect the migration plan before confirming. The deterministic seed is the reviewed ten-entry pilot baseline; never use `db reset` against a shared or production project.
+
+   A database seeded before 17 September 2026 holds only the original five entries. Add the five reviewed expansion entries once with the idempotent data script, from the same protected workstation, after taking a backup:
+
+   ```bash
+   psql "$PRODUCTION_DIRECT_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/data/20260917_add_five_reviewed_services.sql
+   ```
+
+   It prints `pages_added` (5 on first run, 0 on any re-run) and changes nothing that already exists.
 3. Copy the Supabase **transaction pooler** URI into Vercel as `DATABASE_URL`. Add:
 
    ```text
