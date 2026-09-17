@@ -10,6 +10,7 @@ export function SiteFooter() {
         </div>
         <div>
           <Link href="/about">About the data</Link>
+          <Link href="/interoperability">ORUK interoperability</Link>
           <Link href="/status">Technical status</Link>
           <a href="https://github.com/SayamDev/ORUK-Navigator">View on GitHub</a>
         </div>
