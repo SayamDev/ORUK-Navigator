@@ -52,10 +52,11 @@ The working prototype includes:
 
 ### ORUK Integration
 
+- **[ORUK v3 publishing feed](docs/oruk-feed.md)** — the reviewed Tameside catalogue published as an HSDS-UK-3.0 API at [`/api/oruk/v3`](https://oruk-navigator.vercel.app/api/oruk/v3), so partners can reuse it instead of re-keying council pages
 - [Current ORUK and source research](docs/research.md)
 - [Initial Tameside source manifest](docs/research/initial-source-manifest.md)
 - [Tameside data-route decision](docs/research/tameside-data-route.md)
-- Curated council pages are a transparent pilot bridge, not a claim of native ORUK feed coverage
+- Curated council pages are a transparent pilot bridge, not a claim of an official council ORUK feed
 
 ### Search & AI
 

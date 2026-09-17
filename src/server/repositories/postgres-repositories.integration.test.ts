@@ -44,6 +44,17 @@ describe("Postgres repository boundary", () => {
     expect(service?.actions[0]?.url).toMatch(/^https:\/\/www\.tameside\.gov\.uk/);
   });
 
+  it("finds an active publication by its public ORUK identifier", async () => {
+    const [first] = await catalogue.listActive();
+    if (!first) throw new Error("Expected seeded catalogue entries");
+
+    await expect(catalogue.findActiveByPublicId(first.publicId)).resolves.toMatchObject({
+      slug: first.slug,
+    });
+    await expect(catalogue.findActiveByPublicId("00000000-0000-4000-8000-000000000000")).resolves.toBeNull();
+    await expect(catalogue.findActiveByPublicId("not-a-uuid")).resolves.toBeNull();
+  });
+
   it("claims replayed candidates idempotently", async () => {
     const candidate = await candidateFixture("idempotent");
     candidate.evidence = [

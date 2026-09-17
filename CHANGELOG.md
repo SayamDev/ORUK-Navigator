@@ -15,6 +15,7 @@ All notable public-facing changes are recorded here. The project follows semanti
 - Public Vercel pilot backed by a dedicated UK-region Free Plan Supabase project.
 - Five more reviewed Tameside Council services: Housing Payments, Tameside Carers Centre, Family Hubs, Equipment and Adaptations, and the adult social care Early Support and Advice Hub, with an idempotent data script for existing databases.
 - Common-search choices for caring for someone, families and children, and equipment and adaptations.
+- ORUK v3 (HSDS-UK-3.0) publishing feed at `/api/oruk/v3` with services and organisations endpoints, validated as Level 1 compliant by the official Open Referral UK validator.
 
 ### Changed
 
