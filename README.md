@@ -35,6 +35,7 @@ The working prototype includes:
 
 ### Architecture
 
+- **[Architecture walkthrough](docs/architecture-walkthrough.md)** — start here: how a request travels, from public search to reviewed publication to published ORUK data
 - [Domain and PostgreSQL persistence boundary](docs/data-model.md)
 - [Local database and migration workflow](docs/database.md)
 - [Source admission and ingestion contract](docs/ingestion.md)
@@ -73,6 +74,10 @@ The working prototype includes:
 - Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
 - [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
 - Production deployment is live; the production ingestion schedule remains an upcoming implementation milestone
+
+### Standards
+
+- **[GDS Service Standard self-assessment](docs/gds-service-standard.md)** — all 14 points, with evidence and the points this pilot does not meet
 
 ### Accessibility
 
