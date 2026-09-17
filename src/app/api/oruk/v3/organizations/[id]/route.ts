@@ -9,9 +9,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   _request: NextRequest,
-  context: RouteContext<"/api/oruk/v3/organizations/[id]">,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
   if (id !== publisherId) return feedError("Organization not found", 404);
 
   try {

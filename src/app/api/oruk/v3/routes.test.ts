@@ -93,11 +93,11 @@ function request(path: string): NextRequest {
 }
 
 function context(id: string) {
-  return { params: Promise.resolve({ id }) } as RouteContext<"/api/oruk/v3/services/[id]">;
+  return { params: Promise.resolve({ id }) };
 }
 
 function organizationContext(id: string) {
-  return { params: Promise.resolve({ id }) } as RouteContext<"/api/oruk/v3/organizations/[id]">;
+  return { params: Promise.resolve({ id }) };
 }
 
 function service(publicId: string, name: string, description: string): CatalogueService {

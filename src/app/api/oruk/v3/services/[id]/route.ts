@@ -7,8 +7,11 @@ import { getCatalogueRepository } from "@/server/repositories";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(_request: NextRequest, context: RouteContext<"/api/oruk/v3/services/[id]">) {
-  const { id } = await context.params;
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
 
   try {
     const service = await getCatalogueRepository().findActiveByPublicId(id);
