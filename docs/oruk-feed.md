@@ -66,6 +66,20 @@ To validate a local development server instead, use `http://host.docker.internal
 - `src/app/api/oruk/v3/**/route.ts` — Next.js route handlers backed by `CatalogueRepository`
 - Tests: `src/oruk/service-mapper.test.ts`, `src/app/api/oruk/v3/routes.test.ts`, and the repository integration test for `findActiveByPublicId`
 
+## Reading other feeds
+
+`/interoperability` probes the published ORUK feeds listed in the official directory (Shropshire, Bristol, Dorset) alongside Navigator's own, and reports what each one declares and how completely its records are populated.
+
+The probe is deliberately narrow, because the licensing boundary in `docs/research/licensing.md` allows reading a feed but not storing or republishing another publisher's records without explicit permission:
+
+- anonymous, bounded, read-only requests to the feed's own endpoints;
+- a sample of at most 25 records per feed, cached for an hour;
+- counts and summary facts only — no service record from another publisher is stored or displayed.
+
+Code: `src/oruk/feed-directory.ts`, `src/oruk/feed-probe.ts`, `src/app/interoperability/page.tsx`. Tests in `src/oruk/feed-probe.test.ts` include a check that no probed record text survives into the result.
+
+Observed on 17 September 2026: Shropshire (5,132 services) and Bristol (874) both declare `HSDS-UK-3.0` with 100% coverage of the sampled fields, but publish the placeholder profile `https://path/to/profile`, and most sampled records were last checked over a year ago. Dorset declares `V3` with 98% coverage.
+
 ## Try it
 
 ```bash

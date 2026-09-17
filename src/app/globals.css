@@ -57,6 +57,13 @@ input,textarea { width:100%; min-height:3rem; border:2px solid #667085; border-r
 .status-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:2rem 0}.status-summary div{padding:1.25rem;border-top:.35rem solid var(--cyan);background:var(--surface)}.status-summary dt{font-weight:700}.status-summary dd{margin:.35rem 0 0;color:var(--navy);font-family:"Newsreader",Georgia,serif;font-size:1.75rem;font-weight:600;overflow-wrap:anywhere}
 @media (max-width: 760px) { .shell{width:min(100% - 2rem,90rem)}.header-inner{align-items:flex-start;padding-block:1rem}.site-header nav{gap:.75rem;flex-direction:column;align-items:flex-end}.hero-grid{grid-template-columns:1fr;min-height:auto;gap:0}.hero-copy{padding-block:4rem 2rem}.coverage-panel{margin-bottom:7rem;padding:1.5rem}.search-panel{margin-top:-5rem;padding:1.25rem}.suggestion-list{display:grid}.suggestion-button{width:100%}.steps,.detail-grid,.footer-grid,.status-summary{grid-template-columns:1fr}.results-heading-row,.card-actions{align-items:flex-start;flex-direction:column;gap:.5rem}.detail-grid{gap:2rem}.detail-grid aside{padding-top:0}h1{font-size:3.25rem}.result-card dl{display:grid;gap:.5rem}.breadcrumbs{padding-bottom:2rem} }
 
+.feed-card { padding:2rem 0; border-bottom:1px solid var(--border); }
+.feed-card h3 { font-family:"Newsreader",Georgia,serif; font-size:1.75rem; margin:0 0 .25rem; }
+.coverage-table { width:100%; border-collapse:collapse; margin-top:1rem; }
+.coverage-table caption { text-align:left; color:var(--muted); font-size:.95rem; padding-bottom:.5rem; }
+.coverage-table th, .coverage-table td { text-align:left; padding:.45rem .75rem .45rem 0; border-bottom:1px solid var(--border); font-weight:400; }
+.feed-warnings { margin:1rem 0 0; padding-left:1.25rem; color:var(--muted); }
+
 /* Motion: minimal and optional (DESIGN.md). Transform/opacity only; reduced motion keeps fades, drops movement. */
 .suggestion-button,.button { transition:transform var(--duration-press) var(--ease-out), background-color var(--duration-hover) ease; }
 .suggestion-button:active,.button:not(:disabled):active { transform:scale(0.97); }
