@@ -75,7 +75,19 @@ export class PostgresCatalogueRepository implements CatalogueRepository {
 
     return rows[0] ? normalizeRow(rows[0]) : null;
   }
+
+  async findActiveByPublicId(publicId: string): Promise<CatalogueService | null> {
+    if (!uuidPattern.test(publicId)) return null;
+    const rows = await this.sql.unsafe<CatalogueRow[]>(
+      `${activeCatalogueQuery} and entry.public_id = $1::uuid limit 1`,
+      [publicId],
+    );
+
+    return rows[0] ? normalizeRow(rows[0]) : null;
+  }
 }
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function normalizeRow(row: CatalogueRow): CatalogueService {
   return {
