@@ -20,13 +20,17 @@ public sealed class FeedQualityAnalyser
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    /// <summary>Reads feed metadata and a bounded sample of services, then reports on them.</summary>
+    /// <summary>Reads feed metadata and either a sample or bounded pages of services.</summary>
     public async Task<FeedQualityReport> AnalyseAsync(
         string feedUrl,
         int sampleSize = 50,
+        bool allPages = false,
+        int maxRecords = 10_000,
         CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(sampleSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(sampleSize, 200);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxRecords, 1);
 
         var findings = new List<Finding>();
         var metadata = await _client.GetMetadataAsync(cancellationToken).ConfigureAwait(false);
@@ -42,7 +46,97 @@ public sealed class FeedQualityAnalyser
 
         InspectEnvelope(page, findings);
 
-        var services = page.Contents ?? [];
+        var services = new List<OrukService>(page.Contents ?? []);
+        var completeScan = false;
+
+        if (allPages)
+        {
+            var currentPage = page;
+            var pageNumber = 1;
+            var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (page.PageNumber is { } firstPageNumber && firstPageNumber != 1)
+                findings.Add(new Finding(FindingSeverity.Error, "PAGE_NUMBER_MISMATCH",
+                    $"Requested page 1, but the feed reported page {firstPageNumber}."));
+
+            if (services.Count > maxRecords)
+            {
+                services.RemoveRange(maxRecords, services.Count - maxRecords);
+                findings.Add(new Finding(FindingSeverity.Error, "INSPECTION_LIMIT_REACHED",
+                    $"Stopped after {services.Count} records. Increase --max-records to inspect the complete feed."));
+            }
+
+            foreach (var service in services)
+            {
+                if (!string.IsNullOrWhiteSpace(service.Id) && !seenIds.Add(service.Id))
+                    findings.Add(new Finding(FindingSeverity.Error, "DUPLICATE_SERVICE_ID",
+                        $"Service id {service.Id} appears more than once in the inspected pages."));
+            }
+
+            while (!findings.Any(finding => finding.Code is "INSPECTION_LIMIT_REACHED" or "PAGE_NUMBER_MISMATCH") &&
+                   currentPage.LastPage != true &&
+                   (currentPage.TotalPages is null || pageNumber < currentPage.TotalPages))
+            {
+                if (services.Count >= maxRecords)
+                {
+                    findings.Add(new Finding(FindingSeverity.Error, "INSPECTION_LIMIT_REACHED",
+                        $"Stopped after {services.Count} records. Increase --max-records to inspect the complete feed."));
+                    break;
+                }
+
+                pageNumber++;
+                var nextPage = await _client.GetServicePageAsync(pageNumber, sampleSize, cancellationToken)
+                    .ConfigureAwait(false);
+                if (nextPage?.Contents is not { Count: > 0 })
+                {
+                    findings.Add(new Finding(FindingSeverity.Error, "PAGINATION_STALLED",
+                        $"Page {pageNumber} did not return service records before the feed ended."));
+                    break;
+                }
+
+                if (nextPage.PageNumber is { } reportedPage && reportedPage != pageNumber)
+                {
+                    findings.Add(new Finding(FindingSeverity.Error, "PAGE_NUMBER_MISMATCH",
+                        $"Requested page {pageNumber}, but the feed reported page {reportedPage}."));
+                    break;
+                }
+
+                var availableSlots = maxRecords - services.Count;
+                foreach (var service in nextPage.Contents.Take(availableSlots))
+                {
+                    services.Add(service);
+                    if (!string.IsNullOrWhiteSpace(service.Id) && !seenIds.Add(service.Id))
+                        findings.Add(new Finding(FindingSeverity.Error, "DUPLICATE_SERVICE_ID",
+                            $"Service id {service.Id} appears more than once in the inspected pages."));
+                }
+
+                currentPage = nextPage;
+                if (nextPage.Contents.Count > availableSlots)
+                {
+                    findings.Add(new Finding(FindingSeverity.Error, "INSPECTION_LIMIT_REACHED",
+                        $"Stopped after {services.Count} records. Increase --max-records to inspect the complete feed."));
+                    break;
+                }
+            }
+
+            if (page.TotalItems is { } declaredTotal && declaredTotal != services.Count)
+            {
+                findings.Add(new Finding(FindingSeverity.Error, "TOTAL_COUNT_MISMATCH",
+                    $"The feed declares {declaredTotal} services, but {services.Count} were inspected."));
+            }
+
+            if (currentPage.TotalPages is { } totalPages && pageNumber != totalPages &&
+                !findings.Any(finding => finding.Code is "INSPECTION_LIMIT_REACHED" or "PAGINATION_STALLED" or "PAGE_NUMBER_MISMATCH"))
+            {
+                findings.Add(new Finding(FindingSeverity.Error, "TOTAL_PAGES_MISMATCH",
+                    $"The feed declares {totalPages} pages, but page {pageNumber} was the last inspected page."));
+            }
+
+            completeScan = !findings.Any(finding => finding.Code is
+                "INSPECTION_LIMIT_REACHED" or "PAGINATION_STALLED" or "PAGE_NUMBER_MISMATCH" or
+                "TOTAL_COUNT_MISMATCH" or "TOTAL_PAGES_MISMATCH");
+        }
+
         await InspectDetailEndpointAsync(services, findings, cancellationToken).ConfigureAwait(false);
         var coverage = MeasureCoverage(services);
         InspectCoverage(coverage, services.Count, findings);
@@ -54,7 +148,8 @@ public sealed class FeedQualityAnalyser
             page.TotalItems ?? services.Count,
             services.Count,
             coverage,
-            findings);
+            findings,
+            completeScan);
     }
 
     private static void InspectMetadata(FeedMetadata? metadata, List<Finding> findings)

@@ -27,7 +27,8 @@ public sealed record FeedQualityReport(
     int TotalItems,
     int SampledServices,
     IReadOnlyList<FieldCoverage> Coverage,
-    IReadOnlyList<Finding> Findings)
+    IReadOnlyList<Finding> Findings,
+    bool CompleteScan = false)
 {
     /// <summary>Zero to 100, averaging how completely the sampled records populate useful fields.</summary>
     public double CompletenessScore => Coverage.Count == 0

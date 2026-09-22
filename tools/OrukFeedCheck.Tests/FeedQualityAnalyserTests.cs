@@ -113,6 +113,64 @@ public sealed class FeedQualityAnalyserTests
             () => analyser.AnalyseAsync("https://example.org/feed", 0));
     }
 
+    [Fact]
+    public async Task Full_scan_inspects_every_page_and_reports_missing_fields_beyond_the_first_page()
+    {
+        var feed = StubFeedClient.Healthy();
+        feed.Paginate = true;
+        feed.Services[1] = feed.Services[1] with { Status = null };
+
+        var report = await new FeedQualityAnalyser(feed, new FixedTimeProvider(Today))
+            .AnalyseAsync("https://example.org/feed", sampleSize: 1, allPages: true);
+
+        Assert.True(report.CompleteScan);
+        Assert.Equal(2, report.SampledServices);
+        Assert.Equal(2, feed.RequestedPages.Count);
+        Assert.Contains(report.Findings, finding => finding.Code == "REQUIRED_FIELD_MISSING");
+    }
+
+    [Fact]
+    public async Task Full_scan_fails_closed_when_its_record_limit_prevents_complete_inspection()
+    {
+        var feed = StubFeedClient.Healthy();
+        feed.Paginate = true;
+
+        var report = await new FeedQualityAnalyser(feed, new FixedTimeProvider(Today))
+            .AnalyseAsync("https://example.org/feed", sampleSize: 1, allPages: true, maxRecords: 1);
+
+        Assert.False(report.CompleteScan);
+        Assert.True(report.HasErrors);
+        Assert.Contains(report.Findings, finding => finding.Code == "INSPECTION_LIMIT_REACHED");
+    }
+
+    [Fact]
+    public async Task Full_scan_detects_repeated_service_ids_across_pages()
+    {
+        var feed = StubFeedClient.Healthy();
+        feed.Paginate = true;
+        feed.Services[1] = feed.Services[1] with { Id = feed.Services[0].Id };
+
+        var report = await new FeedQualityAnalyser(feed, new FixedTimeProvider(Today))
+            .AnalyseAsync("https://example.org/feed", sampleSize: 1, allPages: true);
+
+        Assert.True(report.HasErrors);
+        Assert.Contains(report.Findings, finding => finding.Code == "DUPLICATE_SERVICE_ID");
+    }
+
+    [Fact]
+    public async Task Full_scan_reports_an_unavailable_later_page_as_incomplete()
+    {
+        var feed = StubFeedClient.Healthy();
+        feed.Paginate = true;
+        feed.UnavailablePage = 2;
+
+        var report = await new FeedQualityAnalyser(feed, new FixedTimeProvider(Today))
+            .AnalyseAsync("https://example.org/feed", sampleSize: 1, allPages: true);
+
+        Assert.False(report.CompleteScan);
+        Assert.Contains(report.Findings, finding => finding.Code == "PAGINATION_STALLED");
+    }
+
     private static Task<FeedQualityReport> Analyse(IOrukFeedClient feed) =>
         new FeedQualityAnalyser(feed, new FixedTimeProvider(Today)).AnalyseAsync("https://example.org/feed", 50);
 
@@ -132,6 +190,12 @@ internal sealed class StubFeedClient : IOrukFeedClient
     public bool DetailAvailable { get; set; } = true;
 
     public int? ReportedSize { get; set; }
+
+    public bool Paginate { get; set; }
+
+    public int? UnavailablePage { get; set; }
+
+    public List<int> RequestedPages { get; } = [];
 
     public static StubFeedClient Healthy()
     {
@@ -154,20 +218,22 @@ internal sealed class StubFeedClient : IOrukFeedClient
 
     public Task<ServicePage?> GetServicePageAsync(int page, int perPage, CancellationToken cancellationToken = default)
     {
-        if (!PageAvailable)
+        RequestedPages.Add(page);
+        if (!PageAvailable || page == UnavailablePage)
         {
             return Task.FromResult<ServicePage?>(null);
         }
 
+        var contents = Paginate ? Services.Skip((page - 1) * perPage).Take(perPage).ToList() : Services;
         return Task.FromResult<ServicePage?>(new ServicePage(
             Services.Count,
-            1,
+            Paginate ? (int)Math.Ceiling(Services.Count / (double)perPage) : 1,
             page,
-            ReportedSize ?? Services.Count,
-            true,
-            true,
-            Services.Count == 0,
-            Services));
+            ReportedSize ?? contents.Count,
+            page == 1,
+            !Paginate || page * perPage >= Services.Count,
+            contents.Count == 0,
+            contents));
     }
 
     public Task<OrukService?> GetServiceAsync(string id, CancellationToken cancellationToken = default) =>
