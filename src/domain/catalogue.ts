@@ -32,6 +32,7 @@ export type CatalogueService = {
   providerName: string;
   sourceStatus: SourceHealth;
   sourceCheckedAt: string;
+  lastSuccessfulSourceCheckAt?: string | null;
   costSummary: string | null;
   accessSummary: string | null;
   serviceArea: string;

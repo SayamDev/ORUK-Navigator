@@ -28,6 +28,45 @@ type PublicationRow = { publicationId: string; versionNumber: number };
 export class PostgresIngestionRepository implements IngestionRepository {
   constructor(private readonly sql: Sql) {}
 
+  async resolveApprovedPageForCheck(key: string, canonicalUrl: string): Promise<{
+    sourcePageId: string;
+    previousCanonicalHash?: string;
+  } | null> {
+    const rows = await this.sql.unsafe<Array<{ sourcePageId: string; previousCanonicalHash: string | null }>>(
+      `select page.id::text as "sourcePageId",
+              approved.canonical_content_sha256 as "previousCanonicalHash"
+       from ingest.source_pages page
+       join ingest.sources source on source.id = page.source_id
+       join ingest.source_licences licence on licence.source_id = source.id
+       left join lateral (
+         select candidate.canonical_content_sha256
+         from ingest.extraction_candidates candidate
+         join catalogue.publications publication on publication.approved_candidate_id = candidate.id
+         join catalogue.entries entry on entry.active_publication_id = publication.id
+         where candidate.source_page_id = page.id
+           and entry.lifecycle = 'active'
+           and publication.publication_state = 'active'
+         order by publication.version_number desc
+         limit 1
+       ) approved on true
+       where page.key = $1 and page.canonical_url = $2
+         and page.admission_status = 'approved'
+         and source.admission_status = 'approved' and source.is_enabled
+         and licence.review_status = 'approved'
+         and licence.next_review_at > now()
+         and licence.permits_extraction and licence.permits_normalisation
+         and licence.permits_storage and licence.permits_indexing
+         and licence.permits_display and licence.permits_redistribution
+       limit 1`,
+      [key, canonicalUrl],
+    );
+    const page = rows[0];
+    return page ? {
+      sourcePageId: page.sourcePageId,
+      ...(page.previousCanonicalHash ? { previousCanonicalHash: page.previousCanonicalHash } : {}),
+    } : null;
+  }
+
   async claimCandidate(candidate: CandidateIdentity): Promise<CandidateClaim> {
     return this.sql.begin(async (transaction) => {
       const rows = await transaction.unsafe<CandidateRow[]>(`

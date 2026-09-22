@@ -16,6 +16,7 @@ const activeCatalogueQuery = `
     publication.provider_name as "providerName",
     page.health as "sourceStatus",
     publication.source_checked_at::text as "sourceCheckedAt",
+    page.last_successful_fetch_at::text as "lastSuccessfulSourceCheckAt",
     publication.cost_summary as "costSummary",
     publication.access_summary as "accessSummary",
     coalesce(publication.document ->> 'area', '') as "serviceArea",

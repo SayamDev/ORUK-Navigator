@@ -149,12 +149,13 @@ The workflow separates machine detection from public truth:
 
 An unchanged response may update `last_checked_at` and source health automatically. A changed hash never updates public catalogue fields automatically in v1.
 
-Public records show both:
+Public records distinguish:
 
-- **source checked:** when Navigator most recently fetched and evaluated the page successfully; and
+- **published information reviewed:** when a person last approved the service facts shown publicly;
+- **technical source check:** when Navigator most recently fetched and evaluated the page successfully; and
 - **publisher updated:** only when the publisher explicitly supplies an update date.
 
-The two dates are never substituted for one another.
+These dates are never substituted for one another. A successful technical check does not imply that a changed page was approved for publication.
 
 ## Withdrawal and deletion
 

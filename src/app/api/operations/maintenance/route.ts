@@ -1,13 +1,14 @@
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getOperationsRepository } from "@/server/repositories";
+import { isAuthorizedOperationsRequest } from "@/server/operations/authorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAuthorizedOperationsRequest(request)) {
     return NextResponse.json(
       { error: "Not authorized." },
       { status: 401, headers: { "cache-control": "no-store" } },
@@ -21,13 +22,4 @@ export async function POST(request: NextRequest) {
     { status: "completed", alerts, retention },
     { headers: { "cache-control": "no-store" } },
   );
-}
-
-function isAuthorized(request: NextRequest): boolean {
-  const expected = process.env.OPERATIONS_MAINTENANCE_SECRET;
-  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!expected || expected.length < 32 || expected.startsWith("replace-with-") || !supplied) return false;
-  const expectedBytes = Buffer.from(expected);
-  const suppliedBytes = Buffer.from(supplied);
-  return expectedBytes.length === suppliedBytes.length && timingSafeEqual(expectedBytes, suppliedBytes);
 }

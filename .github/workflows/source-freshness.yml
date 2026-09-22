@@ -1,0 +1,59 @@
+name: Source freshness
+
+on:
+  schedule:
+    - cron: "37 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: operations-maintenance-production
+  cancel-in-progress: false
+
+jobs:
+  check-reviewed-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAINTENANCE_URL: ${{ secrets.OPERATIONS_MAINTENANCE_URL }}
+      MAINTENANCE_SECRET: ${{ secrets.OPERATIONS_MAINTENANCE_SECRET }}
+    steps:
+      - name: Check approved Tameside pages
+        id: source-check
+        shell: bash
+        run: |
+          test -n "$MAINTENANCE_URL"
+          test -n "$MAINTENANCE_SECRET"
+          failed=0
+          for key in crisis-payments welfare-rights debt-advice tameside-homelessness-service adult-mental-health-services housing-payments tameside-carers-centre family-hubs equipment-and-adaptations adult-social-care-early-support; do
+            if curl --fail --silent --show-error --output /dev/null \
+              --request POST \
+              --header "authorization: Bearer $MAINTENANCE_SECRET" \
+              --header "content-type: application/json" \
+              --data "{\"sourceKey\":\"$key\"}" \
+              --max-time 55 \
+              "$MAINTENANCE_URL/api/operations/source-check"; then
+              echo "- $key: checked" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- $key: check failed; inspect the ingestion run" >> "$GITHUB_STEP_SUMMARY"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+      - name: Open or update deduplicated failure issue
+        if: ${{ failure() && steps.source-check.outcome == 'failure' }}
+        shell: bash
+        run: |
+          title="[operations] Scheduled source check failed"
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          body="One or more reviewed source checks failed. Inspect this workflow run and follow docs/runbooks/ingestion-health.md. Source changes are not published automatically. Do not copy secret values or page bodies into this issue."
+          if test -n "$number"; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --label "needs-triage"
+          fi
