@@ -76,7 +76,7 @@ The working prototype includes:
 - Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
 - Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
 - [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
-- Production deployment is live; the production ingestion schedule remains an upcoming implementation milestone
+- Production deployment is live; the weekly source-check workflow checks approved pages without automatically publishing changes
 
 ### Standards
 
@@ -125,7 +125,7 @@ The current checkpoint passes 59 unit/component/evaluation/ingestion tests, 63 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are complete. Public correction intake is intentionally disabled because no fallback operator is available. The full production product is not finished: ingestion scheduling, managed-backup verification, and a human screen-reader pass remain.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, weekly source-check automation, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are implemented. Public correction intake is intentionally disabled because no fallback operator is available. The full production product is not finished: the first live source-check run, review-queue operation, managed-backup verification, and a human screen-reader pass remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

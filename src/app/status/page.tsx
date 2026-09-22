@@ -23,7 +23,7 @@ export default async function StatusPage() {
       <dl className="status-summary">
         <div><dt>Published services</dt><dd>{services.length}</dd></div>
         <div><dt>Sources with a checking warning</dt><dd>{degraded.length}</dd></div>
-        <div><dt>Oldest displayed source check</dt><dd>{oldestCheck ? formatDate(oldestCheck) : "No published checks"}</dd></div>
+        <div><dt>Oldest published review</dt><dd>{oldestCheck ? formatDate(oldestCheck) : "No published reviews"}</dd></div>
       </dl>
     </section>
     <section aria-labelledby="warnings-heading">
@@ -32,7 +32,7 @@ export default async function StatusPage() {
     </section>
     <section aria-labelledby="meaning-heading">
       <h2 id="meaning-heading">What this means</h2>
-      <p>Navigator preserves the last reviewed publication when a source cannot be checked. Always follow the publisher link on a service page before acting.</p>
+      <p>A technical source check is separate from a human review of the information shown here. Navigator preserves the last reviewed publication when a source changes or cannot be checked. Always follow the publisher link on a service page before acting.</p>
       <p>Operational incidents and changes are recorded in the <a href="https://github.com/SayamDev/ORUK-Navigator/issues">public GitHub issue history</a>.</p>
     </section>
   </main>;

@@ -44,6 +44,19 @@ describe("Postgres repository boundary", () => {
     expect(service?.actions[0]?.url).toMatch(/^https:\/\/www\.tameside\.gov\.uk/);
   });
 
+  it("resolves only an approved source page and its published hash for scheduled checks", async () => {
+    const page = await ingestion.resolveApprovedPageForCheck(
+      "crisis-payments",
+      "https://www.tameside.gov.uk/crisis-payments",
+    );
+    expect(page).toMatchObject({ sourcePageId: expect.any(String) });
+    expect(page?.previousCanonicalHash).toMatch(/^[0-9a-f]{64}$/);
+    await expect(ingestion.resolveApprovedPageForCheck(
+      "crisis-payments",
+      "https://example.org/crisis-payments",
+    )).resolves.toBeNull();
+  });
+
   it("finds an active publication by its public ORUK identifier", async () => {
     const [first] = await catalogue.listActive();
     if (!first) throw new Error("Expected seeded catalogue entries");
