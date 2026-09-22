@@ -57,7 +57,8 @@ The working prototype includes:
 
 - **[ORUK v3 publishing feed](docs/oruk-feed.md)** — the reviewed Tameside catalogue published as an HSDS-UK-3.0 API at [`/api/oruk/v3`](https://oruk-navigator.vercel.app/api/oruk/v3), so partners can reuse it instead of re-keying council pages
 - **[Feed interoperability](https://oruk-navigator.vercel.app/interoperability)** — live probes of published ORUK feeds (Shropshire, Bristol, Dorset) reporting version, size and field completeness
-- **[`tools/OrukFeedCheck`](tools/README.md)** — a .NET 10 command-line checker for the data quality of any ORUK v3 feed, run in CI
+- **[`tools/OrukFeedCheck`](tools/README.md)** — a .NET 10 command-line checker for the data quality of any ORUK v3 feed, with its tests run in CI
+- [Validator relationship and interview walkthrough](docs/validator-alignment.md) — what Navigator reuses, what it demonstrates, and where the official validator remains authoritative
 - [Current ORUK and source research](docs/research.md)
 - [Initial Tameside source manifest](docs/research/initial-source-manifest.md)
 - [Tameside data-route decision](docs/research/tameside-data-route.md)

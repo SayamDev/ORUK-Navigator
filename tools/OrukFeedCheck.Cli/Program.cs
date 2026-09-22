@@ -4,12 +4,12 @@ using OrukFeedCheck.Core;
 // Reports on the quality of any Open Referral UK feed: reachability, self-description,
 // paging behaviour and how completely its records are populated.
 //
-//   oruk-feed-check <feed-url> [--sample 50] [--json] [--min-score 60]
+//   oruk-feed-check <feed-url> [--sample 50 | --all [--max-records 10000]] [--json] [--min-score 60]
 
 var parsed = CommandLineOptions.Parse(args);
 if (parsed is not { } options)
 {
-    Console.Error.WriteLine("Usage: oruk-feed-check <feed-url> [--sample <1-200>] [--json] [--min-score <0-100>]");
+    Console.Error.WriteLine("Usage: oruk-feed-check <feed-url> [--sample <1-200> | --all [--max-records <positive integer>]] [--json] [--min-score <0-100>]");
     return 2;
 }
 
@@ -20,7 +20,8 @@ var analyser = new FeedQualityAnalyser(new OrukFeedClient(httpClient, options.Fe
 
 try
 {
-    var report = await analyser.AnalyseAsync(options.FeedUrl.ToString(), options.SampleSize);
+    var report = await analyser.AnalyseAsync(options.FeedUrl.ToString(), options.SampleSize,
+        options.AllPages, options.MaxRecords);
 
     if (options.AsJson)
     {
@@ -48,7 +49,7 @@ static void WriteReport(FeedQualityReport report)
 {
     Console.WriteLine($"Feed:          {report.FeedUrl}");
     Console.WriteLine($"Version:       {report.DeclaredVersion ?? "(not declared)"}");
-    Console.WriteLine($"Services:      {report.TotalItems} total, {report.SampledServices} sampled");
+    Console.WriteLine($"Services:      {report.TotalItems} declared, {report.SampledServices} inspected ({(report.CompleteScan ? "full feed" : "sample or incomplete scan")})");
     Console.WriteLine($"Completeness:  {report.CompletenessScore}%");
     Console.WriteLine();
     Console.WriteLine("Field coverage");
@@ -69,7 +70,8 @@ static void WriteReport(FeedQualityReport report)
 }
 
 /// <summary>Command-line arguments, parsed once so the rest of the tool works with typed values.</summary>
-internal sealed record CommandLineOptions(Uri FeedUrl, int SampleSize, bool AsJson, double MinimumScore)
+internal sealed record CommandLineOptions(Uri FeedUrl, int SampleSize, bool AllPages, int MaxRecords,
+    bool AsJson, double MinimumScore)
 {
     public static CommandLineOptions? Parse(string[] args)
     {
@@ -84,6 +86,10 @@ internal sealed record CommandLineOptions(Uri FeedUrl, int SampleSize, bool AsJs
         }
 
         var sampleSize = 50;
+        var sampleSet = false;
+        var allPages = false;
+        var maxRecords = 10_000;
+        var maxRecordsSet = false;
         var asJson = false;
         var minimumScore = 0d;
 
@@ -94,8 +100,19 @@ internal sealed record CommandLineOptions(Uri FeedUrl, int SampleSize, bool AsJs
                 case "--json":
                     asJson = true;
                     break;
+                case "--all":
+                    allPages = true;
+                    break;
                 case "--sample" when index + 1 < args.Length && int.TryParse(args[index + 1], out var sample):
-                    sampleSize = Math.Clamp(sample, 1, 200);
+                    if (sample is < 1 or > 200) return null;
+                    sampleSize = sample;
+                    sampleSet = true;
+                    index++;
+                    break;
+                case "--max-records" when index + 1 < args.Length && int.TryParse(args[index + 1], out var limit):
+                    if (limit < 1) return null;
+                    maxRecords = limit;
+                    maxRecordsSet = true;
                     index++;
                     break;
                 case "--min-score" when index + 1 < args.Length && double.TryParse(args[index + 1], out var score):
@@ -107,6 +124,8 @@ internal sealed record CommandLineOptions(Uri FeedUrl, int SampleSize, bool AsJs
             }
         }
 
-        return new CommandLineOptions(feedUrl, sampleSize, asJson, minimumScore);
+        if ((allPages && sampleSet) || (!allPages && maxRecordsSet)) return null;
+        return new CommandLineOptions(feedUrl, allPages ? 200 : sampleSize, allPages, maxRecords,
+            asJson, minimumScore);
     }
 }
