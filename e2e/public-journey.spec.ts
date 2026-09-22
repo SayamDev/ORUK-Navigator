@@ -40,7 +40,9 @@ test("keyboard search keeps sensitive input out of the URL and opens reviewed de
 
   await page.getByRole("link", { name: "Welfare Rights" }).click();
   await expect(page.getByRole("heading", { name: "Welfare Rights" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Source and provenance" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Trace this entry" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /View the council’s source page/ })).toHaveAttribute("href", /^https:\/\/www\.tameside\.gov\.uk\//);
+  await expect(page.getByRole("link", { name: /View this entry in the ORUK feed/ })).toHaveAttribute("href", /^\/api\/oruk\/v3\/services\//);
 
   await page.getByRole("link", { name: /Report a problem/ }).click();
   await expect(page.getByRole("heading", { name: "Report a problem" })).toBeVisible();
