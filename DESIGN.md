@@ -58,6 +58,7 @@ Do not use gradients, glassmorphism, heavy shadows, neon colour, or a purple/blu
 
 - Maximum content width: `90rem` with responsive gutters.
 - Search homepage: one dominant task with explicit scope limitation.
+- On narrow screens, the search form comes before the detailed coverage panel. Show a few representative support topics initially and provide an explicit way to reveal the full list.
 - Results: an open divided list; filters are a fieldset, not a dashboard sidebar on small screens.
 - Detail: article plus provenance rail on wide screens, one semantic column on narrow screens.
 - Report: visible radio choices, privacy guidance, error summary, and confirmation state.
@@ -84,4 +85,3 @@ The signature motif is a thin abstract route line with restrained nodes. It enco
 - Show publisher, source URL, checked date, licence, and review status.
 - Never say “best for you”, “eligible”, “available now”, “near you”, “nearest”, or present a confidence percentage.
 - Missing information remains missing; do not invent contacts or opening times.
-

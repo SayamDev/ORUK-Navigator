@@ -2,6 +2,16 @@
 
 ## Agent skills
 
+For frontend design work, read the project-local
+[`ultimate-frontend` skill](agent-skills/ultimate-frontend/SKILL.md). Its three
+core dependencies, `design-taste-frontend`, `impeccable`, and `text-to-lottie`,
+are agent tooling rather than application dependencies. They must be installed
+in the contributor's agent environment; this repository does not bundle their
+third-party files or add a Lottie runtime to the product. Follow the existing
+`DESIGN.md` and the approved Tameside public-service design when a generic
+skill default conflicts with the project brief. Use Lottie only when a specific
+interaction needs it, with a reduced-motion alternative.
+
 ### Issue tracker
 
 Issues and specifications are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.

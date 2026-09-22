@@ -15,16 +15,6 @@ const searchSuggestions = [
     keywords: ["benefit", "money", "welfare", "income", "financial"],
   },
   {
-    label: "Debt and arrears",
-    query: "I need help with debt, rent or mortgage arrears",
-    keywords: ["debt", "arrears", "money", "rent", "mortgage", "bills"],
-  },
-  {
-    label: "Emergency financial help",
-    query: "I need emergency help with money",
-    keywords: ["emergency", "crisis", "money", "payment", "food", "fuel"],
-  },
-  {
     label: "Housing and homelessness",
     query: "I need help with housing or homelessness",
     keywords: ["housing", "homeless", "home", "eviction", "landlord"],
@@ -38,6 +28,16 @@ const searchSuggestions = [
     label: "Caring for someone",
     query: "I need support as a carer looking after someone",
     keywords: ["carer", "caring", "unpaid", "relative", "parent", "partner"],
+  },
+  {
+    label: "Debt and arrears",
+    query: "I need help with debt, rent or mortgage arrears",
+    keywords: ["debt", "arrears", "money", "rent", "mortgage", "bills"],
+  },
+  {
+    label: "Emergency financial help",
+    query: "I need emergency help with money",
+    keywords: ["emergency", "crisis", "money", "payment", "food", "fuel"],
   },
   {
     label: "Families and children",
@@ -57,6 +57,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
   const [place, setPlace] = useState("Ashton-under-Lyne");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<"need" | "place">("need");
+  const [showAllTopics, setShowAllTopics] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const needRef = useRef<HTMLTextAreaElement>(null);
@@ -107,30 +108,20 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
   return (
     <>
       <section className="hero">
-        <div className="shell hero-grid">
+        <div className="shell">
           <div className="hero-copy">
             <p className="eyebrow">Independent public-service discovery</p>
             <h1>Find support in Tameside</h1>
             <p className="lede">Describe what is happening in your own words. We will look across a small set of reviewed council sources.</p>
           </div>
-          <aside className="coverage-panel" aria-labelledby="coverage-heading">
-            <p className="coverage-count"><strong>{services.length}</strong><span>reviewed services</span></p>
-            <h2 id="coverage-heading">What this pilot can help with</h2>
-            <ul>
-              <li>Money, benefits and debt</li>
-              <li>Housing and homelessness</li>
-              <li>Adult mental health</li>
-              <li>Carers, families and children</li>
-              <li>Adult social care and home adaptations</li>
-            </ul>
-            <p>{services.length} reviewed Tameside {services.length === 1 ? "service is" : "services are"} included. This is not an emergency service.</p>
-          </aside>
         </div>
       </section>
 
       <main id="main-content" className="shell search-main">
+        <div className="search-layout">
         <form id="find-support" className="search-panel" method="post" onSubmit={submit} noValidate>
           {error && <div ref={errorRef} className="error-summary" role="alert" tabIndex={-1}><strong>There is a problem</strong><a href={`#${errorField}`}>{error}</a></div>}
+          <p className="pilot-scope">Limited pilot: {services.length} reviewed Tameside {services.length === 1 ? "service" : "services"}. Not for emergencies.</p>
           <div className="field">
             <label htmlFor="need">What support are you looking for?</label>
             <p id="need-hint">For example, “I need help with money and debt advice.”</p>
@@ -140,7 +131,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
                 {normalisedNeed.length >= 2 ? `Suggestions for "${need.trim()}"` : "Common searches"}
               </p>
               {visibleSuggestions.length > 0 ? (
-                <div className="suggestion-list">
+                <div id="suggestion-list" className={`suggestion-list${normalisedNeed.length < 2 && !showAllTopics ? " is-compact" : ""}`}>
                   {visibleSuggestions.map((suggestion) => (
                     <button
                       key={suggestion.label}
@@ -160,6 +151,17 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
               ) : (
                 <p className="suggestions-empty">No matching topic is listed. You can still search in your own words.</p>
               )}
+              {normalisedNeed.length < 2 && (
+                <button
+                  className="show-all-topics"
+                  type="button"
+                  aria-expanded={showAllTopics}
+                  aria-controls="suggestion-list"
+                  onClick={() => setShowAllTopics((current) => !current)}
+                >
+                  {showAllTopics ? "Show fewer topics" : `See all ${searchSuggestions.length} support topics`}
+                </button>
+              )}
               <p id="suggestion-guidance" className="suggestion-guidance">These topics reflect the services currently reviewed in this pilot.</p>
             </div>
           </div>
@@ -171,6 +173,19 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
           <button className="button button-primary" type="submit">Find support <span aria-hidden="true">→</span></button>
           <p className="privacy-note">Your search stays in this browser prototype and is not added to the page address.</p>
         </form>
+        <aside className="coverage-panel" aria-labelledby="coverage-heading">
+          <p className="coverage-count"><strong>{services.length}</strong><span>reviewed services</span></p>
+          <h2 id="coverage-heading">What this pilot can help with</h2>
+          <ul>
+            <li>Money, benefits and debt</li>
+            <li>Housing and homelessness</li>
+            <li>Adult mental health</li>
+            <li>Carers, families and children</li>
+            <li>Adult social care and home adaptations</li>
+          </ul>
+          <p>{services.length} reviewed Tameside {services.length === 1 ? "service is" : "services are"} included. This pilot does not cover every service and is not for emergencies.</p>
+        </aside>
+        </div>
 
         {results !== null ? (
           <section className="results" aria-labelledby="results-heading">
