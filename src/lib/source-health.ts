@@ -3,7 +3,7 @@ import type { SourceHealth } from "@/domain/catalogue";
 export function sourceHealthMessage(status: SourceHealth): string | null {
   const messages: Record<Exclude<SourceHealth, "healthy">, string> = {
     changed:
-      "The source has changed and is awaiting review. This shows the last approved information.",
+      "The latest source check needs human review. This page still shows the last approved information; confirm details with the publisher.",
     stale:
       "We have not successfully checked this source within its review window. Confirm details with the publisher.",
     unreachable:
