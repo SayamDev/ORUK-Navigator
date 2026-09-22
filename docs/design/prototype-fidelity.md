@@ -1,14 +1,14 @@
 # Public journey prototype fidelity record
 
-**Reviewed:** 16 September 2026  
+**Reviewed:** 22 September 2026
 **Reference:** `docs/design/concepts/` and `DESIGN.md`
 
 This record captures the five-point comparison completed after rendering the implementation in a real browser. Code-native semantics and accessibility take precedence over incidental image-generation details.
 
 ## 1. Layout
 
-- The homepage follows the approved information-rich composition: branded bar wordmark, pale-grey hero, editorial heading, reviewed-coverage panel, and overlapping search card.
-- Common topic choices remain visible for people who do not yet know what support exists, then narrow contextually as someone types.
+- The homepage follows the approved information-rich composition: branded bar wordmark, pale-grey hero, editorial heading, reviewed-coverage panel, and overlapping search card. At narrow widths, the form comes before the coverage panel in reading order.
+- Four representative topic choices remain visible on mobile for people who do not yet know what support exists; the full list is one tap away. Suggestions narrow contextually as someone types.
 - Results remain an open divided list rather than a dashboard.
 - Service details use an article and provenance rail on wide screens, collapsing to one column on small screens.
 - The report journey keeps visible radio choices and privacy guidance.

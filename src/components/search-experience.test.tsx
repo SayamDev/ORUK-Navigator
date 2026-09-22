@@ -32,6 +32,8 @@ describe("SearchExperience", () => {
     expect(screen.getByLabelText("Where do you need support?")).toBeInTheDocument();
     expect(screen.getByText(/1 reviewed Tameside service is included/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What this pilot can help with" })).toBeInTheDocument();
+    expect(screen.getByText(/Limited pilot: 1 reviewed Tameside service/i)).toBeInTheDocument();
+    expect(container.querySelector(".search-layout")?.children[0]).toHaveAttribute("id", "find-support");
     expect(container.querySelector(".route-motif")).not.toBeInTheDocument();
   });
 
@@ -42,6 +44,16 @@ describe("SearchExperience", () => {
     expect(screen.getByRole("button", { name: "Benefits and money advice" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Housing and homelessness" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Adult mental health" })).toBeInTheDocument();
+  });
+
+  it("lets narrow-screen visitors reveal the full topic list", async () => {
+    const user = userEvent.setup();
+    render(<SearchExperience services={[service]} />);
+
+    const toggle = screen.getByRole("button", { name: "See all 8 support topics" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: "Show fewer topics" })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("suggests relevant searches while the user types and lets them choose one", async () => {
