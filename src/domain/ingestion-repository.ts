@@ -42,6 +42,7 @@ export type PublicationApproval = {
     completenessInputs: Record<string, boolean>;
     document: Record<string, unknown>;
     publicationState?: "active" | "withdrawn" | "suspended";
+    authoritativeSourceUrl?: string;
   };
 };
 

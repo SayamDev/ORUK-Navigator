@@ -127,7 +127,7 @@ V1 does not require a paid telemetry vendor or distributed tracing platform. Hos
 
 ## Automation and alerts
 
-- The weekly `source-freshness` GitHub Action checks each of the ten approved pages through the authenticated, single-source production endpoint. It uses the existing maintenance URL and secret; the database credential stays server-only in Vercel. A changed source creates a review candidate, never an automatic publication.
+- The `source-freshness` GitHub Action checks each of the ten approved pages through the authenticated, single-source production endpoint. It uses the existing maintenance URL and secret; the database credential stays server-only in Vercel. Its weekly schedule is temporarily paused after the 24 September 2026 live extraction failure; maintainers can dispatch controlled retests. A changed source creates a review candidate, never an automatic publication.
 - The `operations-maintenance` action runs afterward to reconcile source alerts and retention. Both workflows share a concurrency group so they cannot overlap.
 - Concurrency prevents overlapping runs for the same environment.
 - Every run produces a machine-readable summary and a human-readable job summary without source bodies or user input.

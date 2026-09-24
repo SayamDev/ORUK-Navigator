@@ -25,8 +25,64 @@ type LockedCandidate = {
 type EntryRow = { entryId: string };
 type PublicationRow = { publicationId: string; versionNumber: number };
 
+export type PendingReviewCandidate = {
+  candidateId: string;
+  sourceKey: string;
+  canonicalUrl: string;
+  sourceHealth: string;
+  candidateHash: string;
+  adapterVersion: string;
+  rulesVersion: string;
+  normalizedPayload: Record<string, unknown>;
+  retrievedAt: string;
+  isContractValid: boolean;
+  sourceApproved: boolean;
+  isLatestCheck: boolean;
+  hasRequiredEvidence: boolean;
+};
+
 export class PostgresIngestionRepository implements IngestionRepository {
   constructor(private readonly sql: Sql) {}
+
+  async findPendingReviewCandidate(candidateId: string): Promise<PendingReviewCandidate | null> {
+    const rows = await this.sql.unsafe<PendingReviewCandidate[]>(
+      `select candidate.id::text as "candidateId",
+              page.key as "sourceKey",
+              page.canonical_url as "canonicalUrl",
+              page.health as "sourceHealth",
+              candidate.canonical_content_sha256 as "candidateHash",
+              candidate.adapter_version as "adapterVersion",
+              candidate.rules_version as "rulesVersion",
+              candidate.normalized_payload as "normalizedPayload",
+              observation.retrieved_at::text as "retrievedAt",
+              observation.is_contract_valid as "isContractValid",
+              (select count(distinct evidence.field_path) = 4
+               from ingest.candidate_field_evidence evidence
+               where evidence.candidate_id = candidate.id
+                 and evidence.field_path in ('name', 'description', 'area', 'access')
+                 and evidence.evidence_kind = 'text'
+                 and length(trim(coalesce(evidence.normalized_excerpt, ''))) > 0) as "hasRequiredEvidence",
+              not exists (
+                select 1 from ingest.fetch_observations newer
+                where newer.source_page_id = page.id
+                  and newer.retrieved_at > observation.retrieved_at
+              ) as "isLatestCheck",
+              (page.admission_status = 'approved'
+                and source.admission_status = 'approved' and source.is_enabled
+                and licence.review_status = 'approved' and licence.next_review_at > now()
+                and licence.permits_display and licence.permits_redistribution) as "sourceApproved"
+       from ingest.extraction_candidates candidate
+       join ingest.source_pages page on page.id = candidate.source_page_id
+       join ingest.sources source on source.id = page.source_id
+       join ingest.source_licences licence on licence.source_id = source.id
+         and licence.review_status = 'approved'
+       join ingest.fetch_observations observation on observation.id = candidate.fetch_observation_id
+       where candidate.id = $1 and candidate.review_status = 'pending_review'
+       limit 1`,
+      [candidateId],
+    );
+    return rows[0] ?? null;
+  }
 
   async resolveApprovedPageForCheck(key: string, canonicalUrl: string): Promise<{
     sourcePageId: string;
@@ -270,6 +326,15 @@ export class PostgresIngestionRepository implements IngestionRepository {
         throw new Error("Publication could not be created");
       }
 
+      if (approval.publication.authoritativeSourceUrl) {
+        await transaction.unsafe(
+          `insert into catalogue.source_actions (
+            publication_id, kind, label, url, sort_order
+          ) values ($1, 'authoritative_details', 'Check current details on the council website', $2, 0)`,
+          [publication.publicationId, approval.publication.authoritativeSourceUrl],
+        );
+      }
+
       await transaction.unsafe(`
         insert into ingest.review_decisions (
           candidate_id, decision, reason, reviewer, resulting_publication_id
@@ -287,6 +352,14 @@ export class PostgresIngestionRepository implements IngestionRepository {
         set review_status = 'approved'
         where id = $1
       `, [approval.candidateId]);
+
+      await transaction.unsafe(
+        `update ingest.source_pages page
+         set health = 'healthy', updated_at = now()
+         from ingest.extraction_candidates candidate
+         where candidate.id = $1 and page.id = candidate.source_page_id`,
+        [approval.candidateId],
+      );
 
       await transaction.unsafe(`
         update catalogue.entries

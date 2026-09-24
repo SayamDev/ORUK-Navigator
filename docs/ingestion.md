@@ -13,7 +13,7 @@ The ten-page Tameside pilot contract (five pages admitted on 15 September 2026, 
 - persisted run, observation, health, review, immutable publication, withdrawal, and suspension transitions; and
 - durable idempotent search-projection jobs that do not roll back approval.
 
-See `docs/security/ingestion-threat-model.md` for the abuse cases, controls, residual DNS risk, and live-source launch gate. The implementation is not a scheduled production feed yet; deployment and monitoring remain issues #17 and #18.
+See `docs/security/ingestion-threat-model.md` for the abuse cases, controls, residual DNS risk, and live-source launch gate. The first production exercise on 24 September 2026 found that fixture selectors do not match the live council markup. Source checks are manual while that boundary is repaired; see [the exercise report](operations/source-check-exercise-2026-09-24.md).
 
 ## Purpose
 
