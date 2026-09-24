@@ -14,7 +14,7 @@
 
 Recruit actual or likely Tameside service users, including people with limited digital confidence and people who already use assistive technology. Do not substitute the project team for public-service users. Use an accessible consent process and do not ask participants to disclose real debt, housing, health or family details. Test with fictional scenarios, collect only the minimum research notes, and obtain separate consent before any recording or public quotation. No search narrative or postcode should be copied into GitHub issues.
 
-GOV.UK's [participant guidance](https://www.gov.uk/service-manual/user-research/find-user-research-participants) suggests four to eight participants for a round of interviews or usability tests and calls for including disabled people and people with lower digital skills. Its [privacy guidance](https://www.gov.uk/service-manual/user-research/managing-user-research-data-participant-privacy) applies to notes and recordings.
+GOV.UK's [participant guidance](https://www.gov.uk/service-manual/user-research/find-user-research-participants) suggests four to eight participants for a round of usability tests and calls for including disabled people and people with lower digital skills. Its [privacy guidance](https://www.gov.uk/service-manual/user-research/managing-user-research-data-participant-privacy) applies to notes and recordings.
 
 ## Moderated tasks
 

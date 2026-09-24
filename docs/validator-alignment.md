@@ -14,13 +14,3 @@ The Validator checks whether a published dataset conforms to an Open Referral sp
 In a live check on 22 September 2026, this mode inspected all 5,132 records in Shropshire's published feed. That full run exposed sparse descriptions and old assurance dates that a first-page sample could understate. The result is a dated observation, not a permanent claim about the publisher.
 
 The command-line checker complements the official Validator. Its completeness percentage is an observation about populated fields in the inspected records, not an ORUK compliance tier or a measure of service quality. It does not replace schema validation, judge whether a service is open, or grant permission to reuse another publisher's data.
-
-## Interview demonstration
-
-1. Search for a need such as “money” on the [live pilot](https://oruk-navigator.vercel.app), open a result, and point to its publisher link, source checked date, and match explanation.
-2. Open the [published feed](https://oruk-navigator.vercel.app/api/oruk/v3/services?per_page=5) and show the same reviewed records in a reusable ORUK envelope.
-3. Reproduce the [official validator check](oruk-feed.md#validation) and explain why required endpoints pass while optional taxonomy and location endpoints remain absent without source evidence.
-4. Run `dotnet run --project tools/OrukFeedCheck.Cli -- https://oruk-navigator.vercel.app/api/oruk/v3 --all --json` from the repository root. Show `CompleteScan`, inspected count, field coverage, and exit status. Compare it with `--sample 5` to explain why a first-page sample can miss later problems.
-5. End with the honest operating limits: the pilot has ten reviewed services; public correction intake remains disabled until someone owns it; production ingestion scheduling, managed-backup verification, and a human screen-reader pass remain open.
-
-The strongest interview story is the boundary between compliance and usefulness: a feed can be schema valid but have stale, sparse, or inconsistent data. Navigator demonstrates publication, consumption, and source-aware user journeys while making those limits visible.
