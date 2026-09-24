@@ -76,7 +76,7 @@ The working prototype includes:
 - Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
 - Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
 - [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
-- Production deployment is live; the weekly source-check workflow checks approved pages without automatically publishing changes
+- Production deployment is live; source checks are manual while the live-page extractor is repaired after the first production exercise. Changes are never published automatically.
 
 ### Standards
 
@@ -89,6 +89,10 @@ The working prototype includes:
 - 48px minimum control targets and responsive browser checks at 1280×720, 390×844, and 320×720
 - Accessibility is a release gate, not a visual-design preference
 - [Accessibility release review and remaining human screen-reader gate](docs/accessibility-review.md)
+- [Usability and assistive-technology test plan](docs/research/usability-and-assistive-tech-plan.md)
+- [Five-minute interview walkthrough](docs/demo/interview-walkthrough.md)
+- [First live source-check exercise and findings](docs/operations/source-check-exercise-2026-09-24.md)
+- [Private source-candidate review runbook](docs/runbooks/source-candidate-review.md)
 
 ### Security
 
@@ -125,7 +129,7 @@ The current checkpoint passes 59 unit/component/evaluation/ingestion tests, 63 p
 
 ## Current status
 
-The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, weekly source-check automation, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are implemented. Public correction intake is intentionally disabled because no fallback operator is available. The full production product is not finished: the first live source-check run, review-queue operation, managed-backup verification, and a human screen-reader pass remain.
+The discovery prototype, core product/architecture decisions, private PostgreSQL foundation, reviewed Tameside ingestion workflow, repository-backed public journey, correction persistence, source-alert reconciliation, retention automation, release pipeline, dedicated Free Plan production database, and public Vercel deployment are implemented. The first live source-check run exposed a mismatch between fixture selectors and real council markup; its schedule is paused pending remediation. Public correction intake is intentionally disabled because no fallback operator is available. The full production product is not finished: live-source extraction, review-queue operation, managed-backup verification, and human usability and screen-reader passes remain.
 
 Track decisions and implementation work in [GitHub Issues](https://github.com/SayamDev/ORUK-Navigator/issues).
 

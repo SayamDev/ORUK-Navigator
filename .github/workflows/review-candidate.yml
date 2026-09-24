@@ -1,0 +1,66 @@
+name: Review source candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_id:
+        description: "Pending candidate ID from the private review query"
+        required: true
+        type: string
+      decision:
+        description: "Editorial decision after checking the council page and field evidence"
+        required: true
+        type: choice
+        options:
+          - approved
+          - changes_requested
+          - rejected
+      expected_hash:
+        description: "Candidate SHA-256 from the private review query (required for approval)"
+        required: false
+        type: string
+      reason:
+        description: "Evidence-based review reason; never include private user information"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-review-production
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      REVIEW_URL: ${{ secrets.OPERATIONS_MAINTENANCE_URL }}
+      REVIEW_SECRET: ${{ secrets.REVIEW_WORKFLOW_SECRET }}
+      CANDIDATE_ID: ${{ inputs.candidate_id }}
+      DECISION: ${{ inputs.decision }}
+      EXPECTED_HASH: ${{ inputs.expected_hash }}
+      REASON: ${{ inputs.reason }}
+      REVIEWER: ${{ github.actor }}
+    steps:
+      - name: Submit human review decision
+        shell: bash
+        run: |
+          test -n "$REVIEW_URL"
+          test -n "$REVIEW_SECRET"
+          payload="$(jq -n \
+            --arg candidateId "$CANDIDATE_ID" \
+            --arg decision "$DECISION" \
+            --arg expectedHash "$EXPECTED_HASH" \
+            --arg reason "$REASON" \
+            --arg reviewer "$REVIEWER" \
+            '{candidateId:$candidateId,decision:$decision,expectedHash:$expectedHash,reason:$reason,reviewer:$reviewer}')"
+          curl --fail --silent --show-error --output /dev/null \
+            --request POST \
+            --header "authorization: Bearer $REVIEW_SECRET" \
+            --header "content-type: application/json" \
+            --data "$payload" \
+            --max-time 60 \
+            "$REVIEW_URL/api/operations/review"
+          echo "Review decision recorded for candidate $CANDIDATE_ID by $REVIEWER. Inspect the private database record for details." >> "$GITHUB_STEP_SUMMARY"

@@ -49,6 +49,7 @@ References: [Vercel Git deployments](https://vercel.com/docs/deployments/git) an
    DATABASE_PREPARE=false
    CORRECTION_RATE_LIMIT_SECRET=<independent random value, at least 32 characters>
    OPERATIONS_MAINTENANCE_SECRET=<different random value, at least 32 characters>
+   REVIEW_WORKFLOW_SECRET=<another distinct random value, at least 32 characters>
    PUBLIC_CORRECTIONS_ENABLED=false
    ```
 
@@ -59,6 +60,7 @@ References: [Vercel Git deployments](https://vercel.com/docs/deployments/git) an
 6. Add GitHub Actions secrets:
    - `OPERATIONS_MAINTENANCE_URL`: the production origin, without a trailing slash;
    - `OPERATIONS_MAINTENANCE_SECRET`: the exact Vercel server secret.
+   - `REVIEW_WORKFLOW_SECRET`: the distinct Vercel review secret. It authorises only human candidate decisions through the protected review route.
 7. Manually run **Operations maintenance** once. Confirm count-only output and no authorization value in logs.
 
 ## Release gates

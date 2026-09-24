@@ -67,7 +67,7 @@ Reading a feed is permitted; storing or republishing another publisher's records
 
 Public correction reporting is implemented but **fails closed**: unless an accountable owner and review hours are configured, the link is hidden and the route returns 404. Accepting reports nobody will read would be worse than not accepting them.
 
-Scheduled GitHub Actions run source-health and retention maintenance against an authenticated endpoint; alerts record source failures. Runbooks cover deployment and rollback, ingestion health, and corrections and retention ([docs/runbooks](runbooks)).
+GitHub Actions runs source-health and retention maintenance against an authenticated endpoint; alerts record source failures. The source-fetch schedule is paused after the first live extractor failure, while controlled manual retests remain available. Runbooks cover deployment and rollback, ingestion health, and corrections and retention ([docs/runbooks](runbooks)).
 
 ## 7. How a change ships
 

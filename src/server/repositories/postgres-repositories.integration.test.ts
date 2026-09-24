@@ -93,6 +93,19 @@ describe("Postgres repository boundary", () => {
     expect(evidenceCount?.count).toBe(1);
   });
 
+  it("finds a pending candidate with source and latest-check approval guards", async () => {
+    const claim = await ingestion.claimCandidate(await candidateFixture(randomUUID()));
+    const pending = await ingestion.findPendingReviewCandidate(claim.candidateId);
+    expect(pending).toMatchObject({
+      candidateId: claim.candidateId,
+      sourceKey: "welfare-rights",
+      canonicalUrl: "https://www.tameside.gov.uk/counciltaxandbenefits/welfarerights",
+      isContractValid: true,
+      sourceApproved: true,
+    });
+    expect(pending?.candidateHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
   it("records rejection without creating or switching a publication", async () => {
     const suffix = randomUUID();
     const claim = await ingestion.claimCandidate(await candidateFixture(suffix));
@@ -122,6 +135,7 @@ describe("Postgres repository boundary", () => {
     const suffix = randomUUID();
     const claim = await ingestion.claimCandidate(await candidateFixture(suffix));
     const approval = approvalFixture(claim.candidateId, `integration-${suffix}`);
+    approval.publication.authoritativeSourceUrl = "https://www.tameside.gov.uk/counciltaxandbenefits/welfarerights";
 
     const result = await ingestion.approveCandidate(approval);
     const service = await catalogue.findActiveBySlug(approval.entrySlug);
@@ -132,6 +146,10 @@ describe("Postgres repository boundary", () => {
       name: "Integration service",
       sourceStatus: "healthy",
     });
+    expect(service?.actions).toEqual([expect.objectContaining({
+      kind: "authoritative_details",
+      url: approval.publication.authoritativeSourceUrl,
+    })]);
 
     const [pendingJob] = await sql.unsafe<Array<{ status: string; count: number }>>(
       `select job.status, count(document.publication_id)::integer as count
