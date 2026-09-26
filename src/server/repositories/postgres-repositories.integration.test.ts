@@ -104,6 +104,15 @@ describe("Postgres repository boundary", () => {
       sourceApproved: true,
     });
     expect(pending?.candidateHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(typeof pending?.normalizedPayload).toBe("object");
+    expect(pending?.normalizedPayload).toMatchObject({ seed: expect.any(String) });
+
+    const [stored] = await sql.unsafe<Array<{ payloadType: string; warningsType: string }>>(
+      `select jsonb_typeof(normalized_payload) as "payloadType", jsonb_typeof(warnings) as "warningsType"
+       from ingest.extraction_candidates where id = $1`,
+      [claim.candidateId],
+    );
+    expect(stored).toEqual({ payloadType: "object", warningsType: "array" });
   });
 
   it("records rejection without creating or switching a publication", async () => {
