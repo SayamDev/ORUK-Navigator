@@ -25,6 +25,27 @@ describe("normaliseNeed", () => {
 });
 
 describe("searchCatalogueServices", () => {
+  it("leads with the homelessness service for everyday eviction wording", () => {
+    const published = [
+      ...services,
+      service(
+        "housing-payments",
+        "Housing Payments",
+        "Discretionary council payments towards housing costs, such as rent shortfalls, deposits or rent in advance.",
+      ),
+    ];
+    const results = searchCatalogueServices(
+      "my landlord is kicking me out and i cant pay rent",
+      published,
+    );
+
+    expect(results[0]?.slug).toBe("tameside-homelessness-service");
+    expect(results[0]?.matchReasons).toContain(
+      "The reviewed service information mentions help for people at risk of losing their home.",
+    );
+    expect(results.map((result) => result.slug)).toContain("housing-payments");
+  });
+
   it("returns reviewed debt services with field-backed reasons", () => {
     const results = searchCatalogueServices("money and debt advice", services);
 

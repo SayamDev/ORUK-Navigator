@@ -54,7 +54,7 @@ const searchSuggestions = [
 export function SearchExperience({ services }: { services: CatalogueService[] }) {
   const [results, setResults] = useState<CatalogueSearchResult[] | null>(null);
   const [need, setNeed] = useState("");
-  const [place, setPlace] = useState("Ashton-under-Lyne");
+  const [place, setPlace] = useState("");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<"need" | "place">("need");
   const [showAllTopics, setShowAllTopics] = useState(false);
@@ -79,7 +79,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
         throw new Error("Tell us what support you are looking for.");
       }
       try {
-        classifyPilotLocation(place);
+        if (place.trim()) classifyPilotLocation(place);
       } catch (locationError) {
         setErrorField("place");
         throw locationError;
@@ -167,7 +167,7 @@ export function SearchExperience({ services }: { services: CatalogueService[] })
           </div>
           <div className="field">
             <label htmlFor="place">Where do you need support?</label>
-            <p id="place-hint">Enter a town or postcode. This pilot is limited to Tameside.</p>
+            <p id="place-hint">Optional. Enter a Tameside town or postcode, for example Ashton-under-Lyne or OL6 6BH.</p>
             <input id="place" name="place" autoComplete="postal-code" aria-describedby="place-hint" value={place} onChange={(event) => setPlace(event.target.value)} />
           </div>
           <button className="button button-primary" type="submit">Find support <span aria-hidden="true">→</span></button>

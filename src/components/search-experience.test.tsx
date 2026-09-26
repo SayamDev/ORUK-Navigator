@@ -99,6 +99,23 @@ describe("SearchExperience", () => {
     });
   });
 
+  it("starts with an empty optional place and accepts a typed Tameside postcode", async () => {
+    const user = userEvent.setup();
+    render(<SearchExperience services={[service]} />);
+
+    const place = screen.getByLabelText("Where do you need support?");
+    expect(place).toHaveValue("");
+    expect(place).toHaveAccessibleDescription(/Optional\. Enter a Tameside town or postcode/);
+
+    await user.type(screen.getByLabelText("What support are you looking for?"), "debt advice");
+    await user.type(place, "OL6 6AA");
+    await user.click(screen.getByRole("button", { name: /find support/i }));
+
+    expect(place).toHaveValue("OL6 6AA");
+    expect(await screen.findByRole("heading", { name: "Support that may help" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("rejects a place outside the pilot and links the error to the place field", async () => {
     const user = userEvent.setup();
     render(<SearchExperience services={[service]} />);
