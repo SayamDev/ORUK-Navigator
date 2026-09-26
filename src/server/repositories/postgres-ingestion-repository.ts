@@ -138,8 +138,8 @@ export class PostgresIngestionRepository implements IngestionRepository {
           review_status,
           warnings
         ) values (
-          $1, $2, $3, $4, $5, $6::jsonb,
-          'candidate', 'pending_review', $7::jsonb
+          $1, $2, $3, $4, $5, ($6::text)::jsonb,
+          'candidate', 'pending_review', ($7::text)::jsonb
         )
         on conflict (
           source_page_id,
@@ -301,7 +301,7 @@ export class PostgresIngestionRepository implements IngestionRepository {
           $1,
           $2,
           coalesce(max(version_number), 0) + 1,
-          $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13
+          $3, $4, $5, $6, $7, $8, $9, $10, ($11::text)::jsonb, ($12::text)::jsonb, $13
         from catalogue.publications
         where entry_id = $1
         returning id as "publicationId", version_number as "versionNumber"
@@ -461,7 +461,7 @@ export class PostgresIngestionRepository implements IngestionRepository {
          changed_count = $5,
          rejected_count = $6,
          failed_count = $7,
-         summary = $8::jsonb
+         summary = ($8::text)::jsonb
        where id = $9 and status = 'running'
        returning id`,
       [
