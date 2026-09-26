@@ -21,7 +21,12 @@ All notable public-facing changes are recorded here. The project follows semanti
 
 ### Changed
 
-- Restored the approved information-rich ORUK Navigator homepage with its branded wordmark, coverage panel, prominent search card, and prefilled Ashton-under-Lyne pilot location.
+- Rebuilt the Tameside page adapter (`tameside-liferay-v2`) around the council's live Liferay markup. Each field is located by a reviewed section heading or line, reviewed wording is published only while confirming text remains on the page, and the test fixtures are now reduced captures of the live pages.
+- The pilot location now starts empty and is optional, so a typed postcode is no longer appended to a prefilled town. Denton, Audenshaw (M34) and Droylsden (M43) postcodes are recognised as Tameside.
+- Everyday eviction wording such as "my landlord is kicking me out" now leads with the homelessness service.
+- The database CI jobs retry Supabase start once after a registry rate limit or port conflict.
+- Project code is released under the MIT Licence.
+- Restored the approved information-rich ORUK Navigator homepage with its branded wordmark, coverage panel, and prominent search card.
 - Kept common support types visible and narrowed them to relevant suggestions as people type.
 - Directed the viewport and keyboard focus to **Support that may help** after a successful search, while respecting reduced-motion preferences.
 - Search words now match only at the start of source words, so short words such as "rent" no longer match inside "current"; matches in a service name rank slightly higher; "financial assessment" no longer counts as financial support.

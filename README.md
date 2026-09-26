@@ -76,7 +76,7 @@ The working prototype includes:
 - Allowlisted Tameside fetch → validation → extraction → review → immutable publication is implemented and tested locally
 - Weekly source-alert reconciliation and correction retention are automated with concurrency and deduplicated failure issues
 - [Correction, alert, and retention runbook](docs/runbooks/corrections-and-retention.md)
-- Production deployment is live; source checks are manual while the live-page extractor is repaired after the first production exercise. Changes are never published automatically.
+- Production deployment is live. The first production source check exposed a selector mismatch with live council markup; the adapter was rebuilt against captured live pages (see the [exercise record](docs/operations/source-check-exercise-2026-09-24.md)). Changes are never published automatically.
 
 ### Standards
 
@@ -114,7 +114,7 @@ pnpm test:repositories
 pnpm test:e2e
 ```
 
-The current checkpoint passes 59 unit/component/evaluation/ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, and 27 production-mode Chromium checks across desktop, 390px, and 320px. CI also enforces strict TypeScript, ESLint, a production build, secret scanning, dependency review, and a production dependency audit.
+The current checkpoint passes 119 unit, component, route, evaluation and ingestion tests, 63 pgTAP database checks, 14 real-PostgreSQL repository integration scenarios, and 27 production-mode Chromium checks across desktop, 390px, and 320px. CI also enforces strict TypeScript, ESLint, a production build, secret scanning, dependency review, and a production dependency audit.
 
 [Deployment, verification, recovery, and rollback runbook](docs/runbooks/deployment-and-rollback.md)
 
@@ -146,4 +146,4 @@ The interface uses an independent civic identity with deep navy, cyan, soft gree
 
 ## Licence
 
-A project-code licence has not yet been selected. Source-data and content licensing are separate concerns; see [licensing research](docs/research/licensing.md) before reusing third-party material.
+Project code is released under the [MIT Licence](LICENSE). Source data and content are licensed separately: Tameside council page content is used under the Open Government Licence v3.0, including the captured test fixtures in `src/ingestion/fixtures/`. See [licensing research](docs/research/licensing.md) before reusing third-party material.

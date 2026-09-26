@@ -13,6 +13,8 @@ const { repository } = vi.hoisted(() => ({
 }));
 vi.mock("@/server/repositories", () => ({ getIngestionRepository: () => repository }));
 
+import { tamesideSourceManifest } from "@/ingestion/source-manifest";
+
 import { POST } from "./route";
 
 const secret = "review-only-secret-with-at-least-thirty-two-characters";
@@ -85,8 +87,8 @@ function candidate(overrides: Record<string, unknown> = {}) {
     canonicalUrl: "https://www.tameside.gov.uk/crisis-payments",
     sourceHealth: "changed",
     candidateHash,
-    adapterVersion: "tameside-html-v1",
-    rulesVersion: "reviewed-pages-v1",
+    adapterVersion: tamesideSourceManifest["crisis-payments"].adapterVersion,
+    rulesVersion: tamesideSourceManifest["crisis-payments"].rulesVersion,
     normalizedPayload: {
       slug: "crisis-payments",
       name: "Crisis Payments",

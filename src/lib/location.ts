@@ -20,7 +20,7 @@ export function classifyPilotLocation(value: string): PilotLocation {
   const normalized = value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("en-GB");
   if (!normalized) throw new Error("Enter a Tameside town or postcode.");
   const compactPostcode = normalized.replace(/\s+/g, "").toUpperCase();
-  if (tamesidePlaces.has(normalized) || /^(?:OL[5-7]|SK1[4-6])\d[A-Z]{2}$/.test(compactPostcode)) {
+  if (tamesidePlaces.has(normalized) || /^(?:OL[5-7]|SK1[4-6]|M34|M43)\d[A-Z]{2}$/.test(compactPostcode)) {
     return { kind: "tameside", label: "Tameside pilot area" };
   }
   throw new Error(
